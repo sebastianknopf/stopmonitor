@@ -1,10 +1,9 @@
 from abc import ABC
-from lxml.etree import cleanup_namespaces
 from lxml.etree import tostring
 from lxml.etree import register_namespace
-from lxml.objectify import deannotate
-from lxml.objectify import Element
-from lxml.objectify import DataElement
+from lxml.etree import Element
+from lxml.etree import SubElement
+from lxml.etree import QName
 
 from .isotime import timestamp
 
@@ -14,36 +13,36 @@ class TriasRequest(ABC):
 
         register_namespace('siri', 'http://www.siri.org.uk/siri')
 
-        self.Trias = Element('Trias', version='1.1')
+        self.trias = Element('Trias', version='1.1', xmlns='http://www.vdv.de/trias')
 
     def xml(self) -> str:
-        deannotate(self.Trias)
-        # cleanup_namespaces(self.Trias)
-
-        return tostring(self.Trias, pretty_print=True, xml_declaration=True, encoding='UTF-8')    
+        return tostring(self.trias, xml_declaration=True)
 
 class ServiceRequest(TriasRequest):
 
     def __init__(self, requestor_ref: str) -> None:
         super().__init__()
 
-        self.Trias.ServiceRequest = Element('ServiceRequest')
-        self.Trias.ServiceRequest.RequestTimestamp = DataElement(timestamp())
-        self.Trias.ServiceRequest.RequestorRef = DataElement(requestor_ref)
+        service_request = SubElement(self.trias, 'ServiceRequest')
+        SubElement(service_request, QName('http://www.siri.org.uk/siri', 'RequestTimestamp')).text = timestamp()
+        SubElement(service_request, QName('http://www.siri.org.uk/siri', 'RequestorRef')).text = requestor_ref
 
 class StopEventRequest(ServiceRequest):
 
     def __init__(self, requestor_ref: str, stop_point_ref: str, dep_arr_time: str) -> None:
         super().__init__(requestor_ref)
 
-        self.Trias.ServiceRequest.RequestPayload = Element('RequestPayload')
-        self.Trias.ServiceRequest.RequestPayload.StopEventRequest = Element('StopEventRequest')
-        self.Trias.ServiceRequest.RequestPayload.StopEventRequest.Location = Element('Location')
-        self.Trias.ServiceRequest.RequestPayload.StopEventRequest.Location.LocationRef = Element('LocationRef')
-        self.Trias.ServiceRequest.RequestPayload.StopEventRequest.Location.LocationRef.StopPointRef = stop_point_ref
-        self.Trias.ServiceRequest.RequestPayload.StopEventRequest.DepArrTime = dep_arr_time
+        service_request = self.trias.find('.//ServiceRequest')
 
-        self.Trias.ServiceRequest.RequestPayload.StopEventRequest.Params = Element('Params')
-        self.Trias.ServiceRequest.RequestPayload.StopEventRequest.Params.NumberOfResults = 20
-        self.Trias.ServiceRequest.RequestPayload.StopEventRequest.Params.StopEventType = 'departure'
-        self.Trias.ServiceRequest.RequestPayload.StopEventRequest.Params.IncludeRealtimeData = True
+        request_payload = SubElement(service_request, 'RequestPayload')
+        stop_event_request = SubElement(request_payload, 'StopEventRequest')
+        location = SubElement(stop_event_request, 'Location')
+        location_ref = SubElement(location, 'LocationRef')
+        SubElement(location_ref, 'StopPointRef').text = stop_point_ref
+        SubElement(stop_event_request, 'DepArrTime').text = dep_arr_time
+
+        params = SubElement(stop_event_request, 'Params')
+        SubElement(params, 'NumberOfResults').text = str(20)
+        SubElement(params, 'StopEventType').text = 'departure'
+        SubElement(params, 'IncludeRealtime').text = str(True).lower()
+
