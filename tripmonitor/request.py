@@ -10,13 +10,11 @@ from .isotime import timestamp
 class TriasRequest(ABC):
 
     def __init__(self):
-
-        register_namespace('siri', 'http://www.siri.org.uk/siri')
-
-        self.trias = Element('Trias', version='1.1', xmlns='http://www.vdv.de/trias')
+        nsmap = {None: 'http://www.vdv.de/trias', 'siri': 'http://www.siri.org.uk/siri'}
+        self.trias = Element('Trias', nsmap=nsmap, version='1.1')
 
     def xml(self) -> str:
-        return tostring(self.trias, xml_declaration=True)
+        return tostring(self.trias, xml_declaration=True, encoding='UTF-8')
 
 class ServiceRequest(TriasRequest):
 
@@ -42,7 +40,7 @@ class StopEventRequest(ServiceRequest):
         SubElement(stop_event_request, 'DepArrTime').text = dep_arr_time
 
         params = SubElement(stop_event_request, 'Params')
-        SubElement(params, 'NumberOfResults').text = str(20)
+        SubElement(params, 'NumberOfResults').text = str(10)
         SubElement(params, 'StopEventType').text = 'departure'
         SubElement(params, 'IncludeRealtime').text = str(True).lower()
 
