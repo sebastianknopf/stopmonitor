@@ -5,11 +5,8 @@ from fastapi import APIRouter
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import Response
-from lxml.etree import fromstring
-from lxml.etree import XMLParser
 
 from .isotime import timestamp
-from .request import TriasRequest
 from .request import StopEventRequest
 from .response import StopEventResponse
 
@@ -23,25 +20,43 @@ class TripMonitorServer:
         self._api_router = APIRouter()
 
         self._api_router.add_api_route('/', endpoint=self._index, methods=['GET'])
-        self._api_router.add_api_route('/departures', endpoint=self._departures, methods=['GET'])
-        self._api_router.add_api_route('/render', endpoint=self._render, methods=['GET'])
+        self._api_router.add_api_route('/json', endpoint=self._json, methods=['GET'])
 
     def _index(self, request: Request) -> Response:
         pass
 
-    def _departures(self, request: Request) -> Response:
+    def _json(self, request: Request) -> Response:
         
-        stop_point_ref = request.query_params['s'] if 's' in request.query_params else ''
+        if not 's' in request.query_params:
+            return Response(status_code=400)
         
-        request = StopEventRequest(self._requestor_ref, stop_point_ref, timestamp())
-        response = self._send_stop_event_request(request)
+        if 'o' in request.query_params:
+            object_type = request.query_params['o']
+        else:
+            object_type = 'departures'
 
-        results = [dict(d.__dict__) for d in response.departures]
+        if 'n' in request.query_params and not request.query_params['n'].isdigit():
+            return Response(status_code=400)
+        
+        try:
+            
+            if object_type == 'departures':
+                stop_point_ref = request.query_params['s'] if 's' in request.query_params else ''
+                num_results = int(request.query_params['n']) if 'n' in request.query_params else 1
+                
+                request = StopEventRequest(self._requestor_ref, stop_point_ref, timestamp(), num_results)
+                response = self._send_stop_event_request(request)
 
-        return Response(content=json.dumps(results), media_type='application/json')
-    
-    def _render(self, reqest: Request) -> Response:
-        pass
+                result = dict()
+                result['departures'] = response.departures
+
+            elif object_type == 'situations':
+                result = dict()
+                result['situations'] = list()
+
+            return Response(content=json.dumps(result), media_type='application/json')
+        except Exception as ex:
+            return Response(content=str(ex), status_code=500)
 
     def _send_stop_event_request(self, trias_request: StopEventRequest):
         response = requests.post(self._request_url, headers={'Content-Type': 'application/xml'}, data=trias_request.xml())

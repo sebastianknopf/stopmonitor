@@ -1,12 +1,21 @@
 from abc import ABC
 from lxml.etree import fromstring
+from lxml.etree import Element
 
-from .model import Departure
+from .isotime import localtime
 
 class TriasResponse(ABC):
     def __init__(self, xml_data: str):
         self.nsmap = {None: 'http://www.vdv.de/trias', 'siri': 'http://www.siri.org.uk/siri'}
         self.root = fromstring(xml_data)
+
+    def _extract(self, xml_object: Element, tag_path: str, default: any = None) -> any:
+        xml_result = xml_object.find(tag_path, self.nsmap)
+        if xml_result is not None:
+            return xml_result.text
+        else:
+            return default
+
 
 class StopEventResponse(TriasResponse):
     def __init__(self, xml_data: str):
@@ -17,14 +26,61 @@ class StopEventResponse(TriasResponse):
         for stop_event_result in self.root.findall('.//StopEventResponse/StopEventResult', self.nsmap):
             stop_event = stop_event_result.find('.//StopEvent', self.nsmap)
             
-            departure = Departure()
-            departure.planned_departure_time = stop_event.find('.//ThisCall/CallAtStop/ServiceDeparture/TimetabledTime', self.nsmap).text
-            departure.line_name = stop_event.find('.//Service/PublishedLineName/Text', self.nsmap).text
-            
-            if stop_event.find('.//ThisCall/CallAtStop/PlannedBay/Text', self.nsmap) is not None:
-                departure.planned_bay = stop_event.find('.//ThisCall/CallAtStop/PlannedBay/Text', self.nsmap).text
-            else:
-                departure.planned_bay = None
+            departure = dict()
 
+            # extract planned and estimated departure time and several other departure information
+            estimated_time = localtime(self._extract(stop_event, './/ThisCall/CallAtStop/ServiceDeparture/EstimatedTime', None))
+                                       
+            departure['planned_time'] = localtime(self._extract(stop_event, './/ThisCall/CallAtStop/ServiceDeparture/TimetabledTime', None)).strftime('%H:%M:%S')
+            departure['estimated_time'] = estimated_time.strftime('%H:%M:%S') if estimated_time is not None else None
+            departure['realtime'] = departure['estimated_time'] is not None
+            departure['cancelled'] = False
+            departure['planned_bay'] = self._extract(stop_event, './/ThisCall/CallAtStop/PlannedBay/Text', None)
+
+            # extract mode and submode
+            departure['mode'] = self._extract(stop_event, './/Service/Mode/PtMode', None)
+
+            if departure['mode'] is not None:
+                if departure['mode'] == 'air':
+                    departure['sub_mode'] = self._extract(stop_event, './/Service/Mode/AirSubmode', None)
+                elif departure['mode'] == 'bus':
+                    departure['sub_mode'] = self._extract(stop_event, './/Service/Mode/BusSubmode', None)
+                elif departure['mode'] == 'trolleyBus':
+                    departure['sub_mode'] = self._extract(stop_event, './/Service/Mode/BusSubmode', None)
+                elif departure['mode'] == 'tram':
+                    departure['sub_mode'] = self._extract(stop_event, './/Service/Mode/TramSubmode', None)
+                elif departure['mode'] == 'coach':
+                    departure['sub_mode'] = self._extract(stop_event, './/Service/Mode/CoachSubmode', None)
+                elif departure['mode'] == 'rail':
+                    departure['sub_mode'] = self._extract(stop_event, './/Service/Mode/RailSubmode', None)
+                elif departure['mode'] == 'intercityRail':
+                    departure['sub_mode'] = self._extract(stop_event, './/Service/Mode/RailSubmode', None)
+                elif departure['mode'] == 'urbanRail':
+                    departure['sub_mode'] = self._extract(stop_event, './/Service/Mode/RailSubmode', None)
+                elif departure['mode'] == 'metro':
+                    departure['sub_mode'] = self._extract(stop_event, './/Service/Mode/MetroSubmode', None)
+                elif departure['mode'] == 'water':
+                    departure['sub_mode'] = self._extract(stop_event, './/Service/Mode/WaterSubmode', None)
+                elif departure['mode'] == 'funicular':
+                    departure['sub_mode'] = self._extract(stop_event, './/Service/Mode/FunicularSubmode', None)
+                else:
+                    departure['sub_mode'] = None
+            else:
+                departure['sub_mode'] = None
+
+            departure['published_mode'] = self._extract(stop_event, './/Service/Mode/Name/Text', None)
+
+            # extract line name and published line name
+            published_line_name = self._extract(stop_event, './/Service/PublishedLineName/Text', None)
+            if departure['published_mode'] is not None:
+                departure['line_name'] = published_line_name.replace(departure['published_mode'], '').strip()
+            else:
+                departure['line_name'] = published_line_name
+
+            departure['line_description'] = self._extract(stop_event, './/Service/RouteDescription/Text', None)
+
+            # extract additional trip parameters
+            departure['origin_text'] = self._extract(stop_event, './/Service/OriginText/Text', None)
+            departure['destination_text'] = self._extract(stop_event, './/Service/DestinationText/Text', None)
 
             self.departures.append(departure)

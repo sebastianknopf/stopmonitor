@@ -27,7 +27,7 @@ class ServiceRequest(TriasRequest):
 
 class StopEventRequest(ServiceRequest):
 
-    def __init__(self, requestor_ref: str, stop_point_ref: str, dep_arr_time: str) -> None:
+    def __init__(self, requestor_ref: str, stop_point_ref: str, dep_arr_time: str, num_results: int = 20) -> None:
         super().__init__(requestor_ref)
 
         service_request = self.trias.find('.//ServiceRequest')
@@ -40,7 +40,7 @@ class StopEventRequest(ServiceRequest):
         SubElement(stop_event_request, 'DepArrTime').text = dep_arr_time
 
         params = SubElement(stop_event_request, 'Params')
-        SubElement(params, 'NumberOfResults').text = str(10)
+        SubElement(params, 'NumberOfResults').text = str(num_results)
         SubElement(params, 'StopEventType').text = 'departure'
-        SubElement(params, 'IncludeRealtime').text = str(True).lower()
+        SubElement(params, 'IncludeRealtimeData').text = str(True).lower()
 
