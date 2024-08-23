@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>{{ app_title }}</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
+		<link rel="stylesheet" href="{{ url_for('static', path='/css/w3.css') }}" />
+		<link rel="stylesheet" href="{{ url_for('static', path='/css/default.css') }}" />
+	</head>
+	<body>
+		<header id="header" class="w3-cell-row w3-padding-16">
+			<div id="clock" class="w3-container w3-hide-medium w3-hide-small w3-cell">
+				<span>14:31</span>
+			</div>
+			<div class="w3-container w3-cell">
+				<span>{{ app_title }}</span>
+			</div>
+			<div class="w3-container w3-cell w3-right-align">
+				<img src="https://www.vpe.de/wp-content/uploads/2022/07/VPE_Verbindet_LOGO.svg" />
+			</div>
+		</header>
+		<main class="w3-main">
+			<table id="departures-table" class="w3-table w3-bordered">
+				<thead id="departures-table-header" class="w3-green">
+					<tr>
+						<th class="w3-padding-16">Linie</th>
+						<th class="w3-padding-16">Richtung</th>
+						<th class="w3-right-align w3-padding-16">Abfahrt</th>
+						<th class="w3-right-align w3-padding-16">Steig</th>
+					</tr>
+				</thead>
+				<tbody id="departures-table-content">
+				</tbody>
+			</table>
+		</main>
+        <script src="{{ url_for('static', path='/js/underscore.js') }}" type="text/javascript"></script>
+		<script src="{{ url_for('static', path='/js/moment.js') }}" type="text/javascript"></script>
+        <script src="{{ url_for('static', path='/js/tripmonitor.js') }}" type="text/javascript"></script>
+        <script>
+        let departureTemplate = `
+            <tr>
+                <td class="w3-padding-32">
+                    <% if (sub_mode == 'localBus') { %>
+                    <span class="w3-tag w3-round w3-blue"><%= line_name %></span>
+                    <% } else if (sub_mode == 'regionalBus') { %>
+                    <span class="w3-tag w3-round w3-green"><%= line_name %></span>
+                    <% } %>
+                </td>
+                <td class="w3-padding-32"><%= destination_text %></td>
+				<% if (realtime) { %>
+				<% estimated_departure_duration_minutes = Math.floor(moment.duration(moment(estimated_time, ['H:m:s']).diff(moment(new Date()))).asMinutes()) %>
+				<% if (estimated_departure_duration_minutes <= 0) { %>
+				<td class="w3-right-align w3-padding-32">sofort</td>
+				<% } else if (estimated_departure_duration_minutes < 10) { %>
+				<td class="w3-right-align w3-padding-32">in <%= estimated_departure_duration_minutes %>min</td>
+				<% } else { %>
+				<% estimated_time_formatted = moment(planned_time, ['H:m:s']).format('HH:mm') %>
+                <td class="w3-right-align w3-padding-32"><%= estimated_time_formatted %></td>
+				<% } %>
+				<% } else { %>
+				<% planned_time_formatted = moment(planned_time, ['H:m:s']).format('HH:mm') %>
+				<td class="w3-right-align w3-padding-32"><%= planned_time_formatted %></td>
+				<% } %>
+                <td class="w3-right-align w3-padding-32"><%= planned_bay %></td>
+            </tr>
+            `;
+        
+        var tm = new TripMonitor('{{ app_stop_ref }}', {{ app_num_results }});
+        tm.updateDepartures(departureTemplate, {{ app_update_frequency }}, function(html) {
+            departuresTableContent = document.getElementById('departures-table-content');
+			departuresTableContent.innerHTML = html;         
+        });
+        </script>
+	</body>
+</html>

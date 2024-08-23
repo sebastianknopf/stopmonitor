@@ -5,6 +5,8 @@ from fastapi import APIRouter
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import Response
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from .isotime import timestamp
 from .request import StopEventRequest
@@ -17,13 +19,31 @@ class TripMonitorServer:
         self._requestor_ref = requestor_ref
 
         self._fastapi = FastAPI()
+        self._fastapi.mount('/static', StaticFiles(directory='static'), name='static')
+
         self._api_router = APIRouter()
-
-        self._api_router.add_api_route('/', endpoint=self._index, methods=['GET'])
+        
         self._api_router.add_api_route('/json', endpoint=self._json, methods=['GET'])
+        
+        self._api_router.add_api_route('/', endpoint=self._index_default, methods=['GET'])
+        self._api_router.add_api_route('/{template}', endpoint=self._index, methods=['GET'])
 
-    def _index(self, request: Request) -> Response:
-        pass
+        self._templates = Jinja2Templates(directory='templates')
+
+    def _index_default(self, request: Request) -> Response:
+        return self._index('default', request)
+
+    def _index(self, template: str, request: Request) -> Response:
+        if not template.endswith('.html'):
+            template = f"{template}.html"
+
+        ctx = dict()
+        ctx['app_title'] = request.query_params['t'] if 't' in request.query_params else 'Abfahrten'
+        ctx['app_stop_ref'] = request.query_params['s'] if 's' in request.query_params else 'de:08231:11'
+        ctx['app_num_results'] = request.query_params['n'] if 'n' in request.query_params and request.query_params['n'].isdigit() else 10
+        ctx['app_update_frequency'] = request.query_params['u'] if 'u' in request.query_params and request.query_params['u'].isdigit() else 30
+
+        return self._templates.TemplateResponse(request=request, name=template, context=ctx)
 
     def _json(self, request: Request) -> Response:
         
