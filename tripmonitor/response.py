@@ -1,6 +1,7 @@
 from abc import ABC
 from lxml.etree import fromstring
 from lxml.etree import Element
+from operator import itemgetter
 
 from .isotime import localtime
 
@@ -23,19 +24,23 @@ class StopEventResponse(TriasResponse):
 
         self.departures = list()
 
+        results = list()
         for stop_event_result in self.root.findall('.//StopEventResponse/StopEventResult', self.nsmap):
             stop_event = stop_event_result.find('.//StopEvent', self.nsmap)
             
             departure = dict()
 
             # extract planned and estimated departure time and several other departure information
+            planned_time = localtime(self._extract(stop_event, './/ThisCall/CallAtStop/ServiceDeparture/TimetabledTime', None))
             estimated_time = localtime(self._extract(stop_event, './/ThisCall/CallAtStop/ServiceDeparture/EstimatedTime', None))
                                        
-            departure['planned_time'] = localtime(self._extract(stop_event, './/ThisCall/CallAtStop/ServiceDeparture/TimetabledTime', None)).strftime('%H:%M:%S')
+            departure['planned_time'] = planned_time.strftime('%H:%M:%S')
             departure['estimated_time'] = estimated_time.strftime('%H:%M:%S') if estimated_time is not None else None
             departure['realtime'] = departure['estimated_time'] is not None
             departure['cancelled'] = False
             departure['planned_bay'] = self._extract(stop_event, './/ThisCall/CallAtStop/PlannedBay/Text', None)
+
+            departure['sort_time'] = estimated_time if estimated_time is not None else planned_time
 
             # extract mode and submode
             departure['mode'] = self._extract(stop_event, './/Service/Mode/PtMode', None)
@@ -83,4 +88,11 @@ class StopEventResponse(TriasResponse):
             departure['origin_text'] = self._extract(stop_event, './/Service/OriginText/Text', None)
             departure['destination_text'] = self._extract(stop_event, './/Service/DestinationText/Text', None)
 
-            self.departures.append(departure)
+            results.append(departure)
+
+            # sort by real departure time (estimated_time if available, else planned_time)
+            sorted_results = sorted(results, key=itemgetter('sort_time'))
+
+            # remove real_departure_time field
+            self.departures = [{k: v for k, v in d.items() if k != 'sort_time'} for d in sorted_results]
+
