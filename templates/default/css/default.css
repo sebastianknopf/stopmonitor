@@ -13,7 +13,7 @@ html, body {
 }
 
 #header img {
-    height: 180px;
+    height: 160px;
 }
 
 #clock {
@@ -68,7 +68,7 @@ table tbody .w3-round {
     }
     
     #header img {
-        height: 25px;
+        height: 45px;
     }
     
     table thead {

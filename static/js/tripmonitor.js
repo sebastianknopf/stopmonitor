@@ -49,6 +49,6 @@ class TripMonitor {
             });
         });
 
-        callback(html);
+        callback(html, result.departures.length);
     }
 }
