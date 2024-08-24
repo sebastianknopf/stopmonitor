@@ -47,27 +47,18 @@ class TripMonitorServer:
 
     def _json(self, datatype: str, stopref: str, ordertype: str, numresults: int, request: Request) -> Response:
         
-        """if not 's' in request.query_params:
+        if not datatype == 'departures' and not datatype == 'situations':
+            datatype = 'departures'
+        
+        if stopref.strip() == '':
             return Response(status_code=400)
         
-        if 'd' in request.query_params:
-            data_type = request.query_params['d']
-        else:
-            data_type = 'departures'
-
-        if 'o' in request.query_params:
-            order_type = request.query_params['o']
-        else:
-            order_type = 'estimated_time'
-
-        if 'm' in request.query_params:
-            mode_filter = request.query_params['m'].split(',')
-        else:
-            mode_filter = None
-
-        if 'n' in request.query_params and not request.query_params['n'].isdigit():
-            return Response(status_code=400)"""
+        if not ordertype == 'planned_time' and not ordertype == 'estimated_time':
+            ordertype = 'estimated_time'
         
+        if numresults > 50:
+            numresults = 50
+
         try:
             
             if datatype == 'departures':                
