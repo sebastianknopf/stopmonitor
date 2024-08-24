@@ -7,13 +7,13 @@ html, body {
 }
 
 #header span {
-    font-size: 5em;
+    font-size: 7em;
     font-weight: bold;
     container-name: header
 }
 
 #header img {
-    height: 125px;
+    height: 180px;
 }
 
 #clock {
@@ -21,11 +21,11 @@ html, body {
 }
 
 table thead {
-    font-size: 4em;
+    font-size: 5em;
 }
 
 table tbody {
-    font-size: 4em;
+    font-size: 6em;
 }
 
 table tbody td:last-child, table thead th:last-child {
@@ -33,7 +33,7 @@ table tbody td:last-child, table thead th:last-child {
 }
 
 table tbody .w3-round {
-    width: 150px;
+    width: 180px;
 }
 
 @media only screen and (max-width: 1000px) {
@@ -56,7 +56,7 @@ table tbody .w3-round {
     }
 
     table tbody .w3-round {
-        width: 60px;
+        width: 75px;
     }
 }
 
@@ -68,7 +68,7 @@ table tbody .w3-round {
     }
     
     #header img {
-        height: 45px;
+        height: 25px;
     }
     
     table thead {

@@ -1,7 +1,8 @@
 class TripMonitor {
-    constructor(stopRef, numResults) {
+    constructor(stopRef, numResults, orderType = 'estimated_time') {
         this.stopRef = stopRef;
         this.numResults = numResults;
+        this.orderType = orderType;
     }
 
     updateDepartures(departureTemplate, udpateFrequency, callback) {
@@ -24,7 +25,8 @@ class TripMonitor {
         let response = await fetch('/json?' + new URLSearchParams({
             s: this.stopRef,
             n: this.numResults,
-            o: 'departures'
+            o: this.orderType,
+            d: 'departures'
         }));
 
         let result = await response.json();
