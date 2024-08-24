@@ -41,10 +41,14 @@
             <tr>
                 <td class="w3-padding-16">
                     <% if (sub_mode == 'localBus') { %>
-                    <span class="w3-tag w3-round w3-blue"><%= line_name %></span>
+                    <span class="w3-tag w3-round w3-center w3-blue"><%= line_name %></span>
                     <% } else if (sub_mode == 'regionalBus') { %>
-                    <span class="w3-tag w3-round w3-green"><%= line_name %></span>
-                    <% } %>
+                    <span class="w3-tag w3-round w3-center w3-green"><%= line_name %></span>
+                    <% } else if (sub_mode == 'suburbanRailway') { %>
+					<span class="w3-tag w3-round w3-center w3-red"><%= line_name %></span>
+					<% } else if (mode == 'rail') { %>
+					<span class="w3-tag w3-round w3-center w3-gray"><%= line_name %></span>
+					<% } %>
                 </td>
                 <td class="w3-padding-16"><%= destination_text %></td>
 				<% if (realtime) { %>
@@ -75,7 +79,7 @@
 			</tr>
 			`;
         
-        let tm = new TripMonitor('{{ app_stop_ref }}', {{ app_num_results }});
+        let tm = new TripMonitor('{{ app_stop_ref }}', {{ app_num_results }}, {% if app_mode_filter is not none %}'{{ app_mode_filter }}'{% else %}null{% endif %});
         tm.updateDepartures(departureTemplate, {{ app_update_frequency }}, function(html, numResults) {
             departuresTableContent = document.getElementById('departures-table-content');
 

@@ -19,7 +19,7 @@ class TriasResponse(ABC):
 
 
 class StopEventResponse(TriasResponse):
-    def __init__(self, xml_data: str, order_type: str = 'estimated_time'):
+    def __init__(self, xml_data: str, mode_filter: list|None = None, order_type: str = 'estimated_time'):
         super().__init__(xml_data)
 
         self.departures = list()
@@ -45,6 +45,11 @@ class StopEventResponse(TriasResponse):
             # extract mode and submode
             departure['mode'] = self._extract(stop_event, './/Service/Mode/PtMode', None)
 
+            # check if modes are filtered and skip departure, if this departure is not meant to be displayed
+            if mode_filter is not None and not departure['mode'] in mode_filter:
+                continue
+
+            # extract submode
             if departure['mode'] is not None:
                 if departure['mode'] == 'air':
                     departure['sub_mode'] = self._extract(stop_event, './/Service/Mode/AirSubmode', None)

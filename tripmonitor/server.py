@@ -42,6 +42,7 @@ class TripMonitorServer:
         ctx['app_title'] = request.query_params['t'] if 't' in request.query_params else 'Abfahrten'
         ctx['app_stop_ref'] = request.query_params['s'] if 's' in request.query_params else 'de:08231:11'
         ctx['app_num_results'] = request.query_params['n'] if 'n' in request.query_params and request.query_params['n'].isdigit() else 10
+        ctx['app_mode_filter'] = request.query_params['m'] if 'm' in request.query_params and request.query_params['m'] else None
         ctx['app_update_frequency'] = request.query_params['u'] if 'u' in request.query_params and request.query_params['u'].isdigit() else 30
 
         return self._templates.TemplateResponse(request=request, name=template, context=ctx)
@@ -61,6 +62,11 @@ class TripMonitorServer:
         else:
             order_type = 'estimated_time'
 
+        if 'm' in request.query_params:
+            mode_filter = request.query_params['m'].split(',')
+        else:
+            mode_filter = None
+
         if 'n' in request.query_params and not request.query_params['n'].isdigit():
             return Response(status_code=400)
         
@@ -71,7 +77,7 @@ class TripMonitorServer:
                 num_results = int(request.query_params['n']) if 'n' in request.query_params else 1
                 
                 request = StopEventRequest(self._requestor_ref, stop_point_ref, timestamp(), num_results)
-                response = self._send_stop_event_request(request, order_type)
+                response = self._send_stop_event_request(request, mode_filter, order_type)
 
                 result = dict()
                 result['departures'] = response.departures
@@ -84,9 +90,9 @@ class TripMonitorServer:
         except Exception as ex:
             return Response(content=str(ex), status_code=500)
 
-    def _send_stop_event_request(self, trias_request: StopEventRequest, order_type: str):
+    def _send_stop_event_request(self, trias_request: StopEventRequest, mode_filter: list|None, order_type: str):
         response = requests.post(self._request_url, headers={'Content-Type': 'application/xml'}, data=trias_request.xml())
-        return StopEventResponse(response.content, order_type)
+        return StopEventResponse(response.content, mode_filter, order_type)
 
     def create(self) -> FastAPI:
         self._fastapi.include_router(self._api_router)
