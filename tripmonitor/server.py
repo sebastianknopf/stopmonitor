@@ -1,4 +1,5 @@
 import json
+import logging
 import requests
 
 from fastapi import APIRouter
@@ -30,6 +31,10 @@ class TripMonitorServer:
 
         self._templates = Jinja2Templates(directory='templates')
 
+        self._cache = None
+
+        self._logger = logging.getLogger('uvicorn')
+
     def _index(self, request: Request) -> Response:
         pass
 
@@ -45,8 +50,14 @@ class TripMonitorServer:
 
         return self._templates.TemplateResponse(request=request, name=template, context=ctx)
 
-    def _json(self, datatype: str, stopref: str, ordertype: str, numresults: int, request: Request) -> Response:
+    def _json(self, datatype: str, stopref: str, ordertype: str, numresults: int, req: Request) -> Response:
         
+        if self._cache is not None:
+            json_cached = self._cache.get(req.url.path)
+            if json_cached is not None:
+                self._logger.info(f'Returning JSON response from cache for {req.url.path}')
+                return Response(content=json_cached, media_type='application/json')
+
         if not datatype == 'departures' and not datatype == 'situations':
             datatype = 'departures'
         
@@ -72,7 +83,12 @@ class TripMonitorServer:
                 result = dict()
                 result['situations'] = list()
 
-            return Response(content=json.dumps(result), media_type='application/json')
+            json_result = json.dumps(result)
+            if self._cache is not None:
+                self._cache.set(req.url.path, json_result, self._cache_ttl)
+
+            self._logger.info(f'Returning JSON response from remote server for {req.url.path}')
+            return Response(content=json_result, media_type='application/json')
         except Exception as ex:
             return Response(content=str(ex), status_code=500)
 
@@ -84,3 +100,9 @@ class TripMonitorServer:
         self._fastapi.include_router(self._api_router)
 
         return self._fastapi
+    
+    def cache(self, host: str, port: int, ttl: int) -> None:
+        import memcache
+
+        self._cache = memcache.Client([f"{host}:{port}"], debug=0)
+        self._cache_ttl = ttl
