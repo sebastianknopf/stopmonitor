@@ -83,7 +83,7 @@
 			</tr>
 			`;
         
-        let tm = new TripMonitor('{{ app_stop_ref }}', {{ app_num_results }}, {% if app_mode_filter is not none %}'{{ app_mode_filter }}'{% else %}null{% endif %});
+        let tm = new TripMonitor('{{ app_stop_ref }}', {{ app_num_results }});
         tm.updateDepartures(departureTemplate, {{ app_update_frequency }}, function(html, numResults) {
             departuresTableContent = document.getElementById('departures-table-content');
 

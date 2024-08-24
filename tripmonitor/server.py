@@ -25,10 +25,8 @@ class TripMonitorServer:
         self._api_router = APIRouter()
         
         self._api_router.add_api_route('/', endpoint=self._index, methods=['GET'])
-
         self._api_router.add_api_route('/view/{template}', endpoint=self._view, methods=['GET'])
-        
-        self._api_router.add_api_route('/json', endpoint=self._json, methods=['GET'])
+        self._api_router.add_api_route('/json/{datatype}/{ordertype}/{stopref}/{numresults}.json', endpoint=self._json, methods=['GET'])
 
         self._templates = Jinja2Templates(directory='templates')
 
@@ -47,9 +45,9 @@ class TripMonitorServer:
 
         return self._templates.TemplateResponse(request=request, name=template, context=ctx)
 
-    def _json(self, request: Request) -> Response:
+    def _json(self, datatype: str, stopref: str, ordertype: str, numresults: int, request: Request) -> Response:
         
-        if not 's' in request.query_params:
+        """if not 's' in request.query_params:
             return Response(status_code=400)
         
         if 'd' in request.query_params:
@@ -68,21 +66,18 @@ class TripMonitorServer:
             mode_filter = None
 
         if 'n' in request.query_params and not request.query_params['n'].isdigit():
-            return Response(status_code=400)
+            return Response(status_code=400)"""
         
         try:
             
-            if data_type == 'departures':
-                stop_point_ref = request.query_params['s'] if 's' in request.query_params else ''
-                num_results = int(request.query_params['n']) if 'n' in request.query_params else 1
-                
-                request = StopEventRequest(self._requestor_ref, stop_point_ref, timestamp(), num_results)
-                response = self._send_stop_event_request(request, mode_filter, order_type)
+            if datatype == 'departures':                
+                request = StopEventRequest(self._requestor_ref, stopref, timestamp(), numresults)
+                response = self._send_stop_event_request(request, ordertype)
 
                 result = dict()
                 result['departures'] = response.departures
 
-            elif data_type == 'situations':
+            elif datatype == 'situations':
                 result = dict()
                 result['situations'] = list()
 
@@ -90,9 +85,9 @@ class TripMonitorServer:
         except Exception as ex:
             return Response(content=str(ex), status_code=500)
 
-    def _send_stop_event_request(self, trias_request: StopEventRequest, mode_filter: list|None, order_type: str):
+    def _send_stop_event_request(self, trias_request: StopEventRequest, order_type: str):
         response = requests.post(self._request_url, headers={'Content-Type': 'application/xml'}, data=trias_request.xml())
-        return StopEventResponse(response.content, mode_filter, order_type)
+        return StopEventResponse(response.content, order_type)
 
     def create(self) -> FastAPI:
         self._fastapi.include_router(self._api_router)

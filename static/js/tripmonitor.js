@@ -1,8 +1,7 @@
 class TripMonitor {
-    constructor(stopRef, numResults, modeFilter = null, orderType = 'estimated_time') {
+    constructor(stopRef, numResults, orderType = 'estimated_time') {
         this.stopRef = stopRef;
         this.numResults = numResults;
-        this.modeFilter = modeFilter;
         this.orderType = orderType;
     }
 
@@ -22,20 +21,8 @@ class TripMonitor {
 
     async updateDeparturesAsync(callback) {
         let t = this;
-        
-        let queryParams = new URLSearchParams({
-            s: this.stopRef,
-            n: this.numResults,
-            o: this.orderType,
-            d: 'departures'
-        });
 
-        if (this.modeFilter != null) {
-            queryParams.append('m', this.modeFilter);
-        }
-
-        let response = await fetch('/json?' + queryParams);
-
+        let response = await fetch(`/json/departures/${this.orderType}/${this.stopRef}/${this.numResults}.json`);
         let result = await response.json();
 
         let html = '';
