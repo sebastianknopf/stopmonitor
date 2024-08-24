@@ -13,6 +13,10 @@ class TriasResponse(ABC):
     def _extract(self, xml_object: Element, tag_path: str, default: any = None) -> any:
         xml_result = xml_object.find(tag_path, self.nsmap)
         if xml_result is not None:
+            if default is not None:
+                t = type(default)
+                return t(xml_result.text)
+            
             return xml_result.text
         else:
             return default
@@ -36,11 +40,19 @@ class StopEventResponse(TriasResponse):
                                        
             departure['planned_time'] = planned_time.strftime('%H:%M:%S')
             departure['estimated_time'] = estimated_time.strftime('%H:%M:%S') if estimated_time is not None else None
-            departure['realtime'] = departure['estimated_time'] is not None
-            departure['cancelled'] = False
             departure['planned_bay'] = self._extract(stop_event, './/ThisCall/CallAtStop/PlannedBay/Text', None)
+            departure['estimated_bay'] = self._extract(stop_event, './/ThisCall/CallAtStop/EstimatedBay/Text', None)
 
             departure['sort_time'] = estimated_time if estimated_time is not None else planned_time
+
+            # extract cancellation info
+            trip_cancelled = self._extract(stop_event, './/Service/Cancelled', False)
+            stop_cancelled = self._extract(stop_event, './/ThisCall/CallAtStop/StopCallStatus/NotServicedStop', False)
+
+            departure['cancelled'] = trip_cancelled or stop_cancelled
+
+            # set flag whether there're any realtime data available
+            departure['realtime'] = departure['estimated_time'] is not None or departure['cancelled']
 
             # extract mode and submode
             departure['mode'] = self._extract(stop_event, './/Service/Mode/PtMode', None)
