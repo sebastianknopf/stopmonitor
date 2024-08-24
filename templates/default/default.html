@@ -52,15 +52,19 @@
                 </td>
                 <td class="w3-padding-16"><%= destination_text %></td>
 				<% if (realtime) { %>
-				<% estimated_departure_duration_minutes = Math.floor(moment.duration(moment(estimated_time, ['H:m:s']).diff(moment(new Date()))).asMinutes()) %>
-				<% if (estimated_departure_duration_minutes <= 0) { %>
-				<td class="w3-right-align w3-padding-16">sofort</td>
-				<% } else if (estimated_departure_duration_minutes < 10) { %>
-				<td class="w3-right-align w3-padding-16">in <%= estimated_departure_duration_minutes %>min</td>
-				<% } else { %>
-				<% estimated_time_formatted = moment(planned_time, ['H:m:s']).format('HH:mm') %>
-                <td class="w3-right-align w3-padding-16"><%= estimated_time_formatted %></td>
-				<% } %>
+					<% if (!cancelled) { %>
+						<% estimated_departure_duration_minutes = Math.floor(moment.duration(moment(estimated_time, ['H:m:s']).diff(moment(new Date()))).asMinutes()) %>
+						<% if (estimated_departure_duration_minutes <= 0) { %>
+						<td class="w3-right-align w3-padding-16">sofort</td>
+						<% } else if (estimated_departure_duration_minutes < 10) { %>
+						<td class="w3-right-align w3-padding-16">in <%= estimated_departure_duration_minutes %>min</td>
+						<% } else { %>
+						<% estimated_time_formatted = moment(planned_time, ['H:m:s']).format('HH:mm') %>
+						<td class="w3-right-align w3-padding-16"><%= estimated_time_formatted %></td>
+						<% } %>
+					<% } else { %>
+					<td class="w3-right-align w3-padding-16 w3-text-red">entfällt</td>
+					<% } %>
 				<% } else { %>
 				<% planned_time_formatted = moment(planned_time, ['H:m:s']).format('HH:mm') %>
 				<td class="w3-right-align w3-padding-16"><%= planned_time_formatted %></td>
