@@ -1,6 +1,7 @@
 import json
 import logging
 import requests
+import yaml
 
 from fastapi import APIRouter
 from fastapi import FastAPI
@@ -15,9 +16,13 @@ from .response import StopEventResponse
 
 class TripMonitorServer:
 
-    def __init__(self, request_url: str, requestor_ref: str):
-        self._request_url = request_url
-        self._requestor_ref = requestor_ref
+    def __init__(self, config_filename: str):
+        
+        with open(config_filename, 'r') as config_file:
+            self._config = yaml.safe_load(config_file) 
+        
+        self._request_url = self._config['app']['remote_server_endpoint']
+        self._requestor_ref = self._config['app']['remote_server_requestor_ref']
 
         self._fastapi = FastAPI()
         self._fastapi.mount('/app/static', StaticFiles(directory='static'), name='static')
@@ -25,28 +30,56 @@ class TripMonitorServer:
 
         self._api_router = APIRouter()
         
-        self._api_router.add_api_route('/', endpoint=self._index, methods=['GET'])
+        # enable landing page if configured
+        if self._config['app']['landing_enabled'] == True:
+            self._api_router.add_api_route('/', endpoint=self._index, methods=['GET'])
+
+        # enable admin page if configured
+        if self._config['app']['admin_enabled'] == True:
+            self._api_router.add_api_route('/admin', endpoint=self._admin, methods=['GET'])
+
+        # enable required routes
         self._api_router.add_api_route('/view/{template}', endpoint=self._view, methods=['GET'])
         self._api_router.add_api_route('/json/{datatype}/{ordertype}/{stopref}/{numresults}.json', endpoint=self._json, methods=['GET'])
 
         self._templates = Jinja2Templates(directory='templates')
 
-        self._cache = None
+        # enable chaching if configured
+        if self._config['app']['caching_enabled'] == True:
+            import memcache
+
+            self._cache = memcache.Client([self._config['caching']['caching_server_endpoint']], debug=0)
+            self._cache_ttl = self._config['caching']['caching_server_ttl_seconds']
+        else:
+            self._cache = None
 
         self._logger = logging.getLogger('uvicorn')
 
     def _index(self, request: Request) -> Response:
-        pass
+        return 'Landing enabled'
+    
+    def _admin(self, request: Request) -> Response:
+        return 'admin enabled'
 
     def _view(self, template: str, request: Request) -> Response:
         template = f"{template}/{template}.html"
 
         ctx = dict()
-        ctx['app_title'] = request.query_params['t'] if 't' in request.query_params else 'Abfahrten'
-        ctx['app_stop_ref'] = request.query_params['s'] if 's' in request.query_params else 'de:08231:11'
-        ctx['app_num_results'] = request.query_params['n'] if 'n' in request.query_params and request.query_params['n'].isdigit() else 10
-        ctx['app_mode_filter'] = request.query_params['m'] if 'm' in request.query_params and request.query_params['m'] else None
-        ctx['app_update_frequency'] = request.query_params['u'] if 'u' in request.query_params and request.query_params['u'].isdigit() else 30
+
+        # set app general variables
+        ctx['app'] = dict()
+        ctx['app']['title'] = request.query_params['t'] if 't' in request.query_params else 'Abfahrten'
+        ctx['app']['stop_ref'] = request.query_params['s'] if 's' in request.query_params else 'de:08231:11'
+        ctx['app']['num_results'] = request.query_params['n'] if 'n' in request.query_params and request.query_params['n'].isdigit() else 10
+        ctx['app']['mode_filter'] = request.query_params['m'] if 'm' in request.query_params and request.query_params['m'] else None
+        ctx['app']['update_frequency'] = request.query_params['u'] if 'u' in request.query_params and request.query_params['u'].isdigit() else 30
+
+        # append template specific variables
+        ctx['template'] = dict()
+        for qp_name, qp_value in request.query_params.items():
+            if qp_name.startswith('tx'):
+                key = qp_name.replace('tx', '')
+                ctx['template'][key] = qp_value
 
         return self._templates.TemplateResponse(request=request, name=template, context=ctx)
 
@@ -100,9 +133,3 @@ class TripMonitorServer:
         self._fastapi.include_router(self._api_router)
 
         return self._fastapi
-    
-    def cache(self, host: str, port: int, ttl: int) -> None:
-        import memcache
-
-        self._cache = memcache.Client([f"{host}:{port}"], debug=0)
-        self._cache_ttl = ttl

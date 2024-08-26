@@ -204,4 +204,7 @@ pip-selfcheck.json
 .history
 .ionide
 
+# project specific
+/config/demo.yaml
+
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python,venv

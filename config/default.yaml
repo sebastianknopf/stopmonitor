@@ -1,0 +1,17 @@
+app:
+  remote_server_endpoint: [YourRemoteServerEndpoint]
+  remote_server_requestor_ref: [YourRemoteServerRequestorRef]
+  landing_enabled: true
+  admin_enabled: false
+  caching_enabled: false
+landing:
+  title: DemoTripMonitorInstance
+  logo: /static/default/logo.svg
+  color: #2196F3
+  title_enabled: true
+  num_results_emabled: false
+admin:
+  something: ComesHereSoon
+caching:
+  caching_server_endpoint: [YourCachingServerEndpoint]
+  caching_server_ttl_seconds: 30
