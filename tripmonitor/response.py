@@ -21,8 +21,8 @@ class TriasResponse(ABC):
         else:
             return default
 
-
 class StopEventResponse(TriasResponse):
+
     def __init__(self, xml_data: str, order_type: str = 'estimated_time'):
         super().__init__(xml_data)
 
@@ -111,3 +111,27 @@ class StopEventResponse(TriasResponse):
             # remove real_departure_time field
             self.departures = [{k: v for k, v in d.items() if k != 'sort_time'} for d in sorted_results]
 
+class LocationInformationResponse(TriasResponse):
+    
+    def __init__(self, xml_data: str):
+        super().__init__(xml_data)
+
+        self.stops = list()
+
+        results = list()
+        for location in self.root.findall('.//LocationInformationResponse/Location', self.nsmap):            
+            departure = dict()
+            departure['id'] = self._extract(location, './/Location/StopPoint/StopPointRef', None)
+
+            stop_name = self._extract(location, './/Location/StopPoint/StopPointName/Text', None)
+            location_name = self._extract(location, './/Location/LocationName/Text', None)
+
+            if location_name is not None and stop_name != location_name:
+                departure['name'] = f"{location_name} {stop_name}"
+            else:
+                departure['name'] = stop_name
+
+            results.append(departure)
+
+        # set results
+        self.stops = results

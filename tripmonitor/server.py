@@ -12,7 +12,9 @@ from fastapi.templating import Jinja2Templates
 
 from .isotime import timestamp
 from .request import StopEventRequest
+from .request import LocationInformationRequest
 from .response import StopEventResponse
+from .response import LocationInformationResponse
 
 class TripMonitorServer:
 
@@ -40,7 +42,8 @@ class TripMonitorServer:
 
         # enable required routes
         self._api_router.add_api_route('/view/{template}', endpoint=self._view, methods=['GET'])
-        self._api_router.add_api_route('/json/{datatype}/{ordertype}/{stopref}/{numresults}.json', endpoint=self._json, methods=['GET'])
+        self._api_router.add_api_route('/json/stops.json', endpoint=self._json_stopfinder, methods=['GET'])
+        self._api_router.add_api_route('/json/{datatype}/{ordertype}/{stopref}/{numresults}.json', endpoint=self._json_datafinder, methods=['GET'])
 
         self._templates = Jinja2Templates(directory='templates')
 
@@ -83,7 +86,7 @@ class TripMonitorServer:
 
         return self._templates.TemplateResponse(request=request, name=template, context=ctx)
 
-    def _json(self, datatype: str, stopref: str, ordertype: str, numresults: int, req: Request) -> Response:
+    def _json_datafinder(self, datatype: str, stopref: str, ordertype: str, numresults: int, req: Request) -> Response:
         
         if self._cache is not None:
             json_cached = self._cache.get(req.url.path)
@@ -104,7 +107,6 @@ class TripMonitorServer:
             numresults = 50
 
         try:
-            
             if datatype == 'departures':                
                 request = StopEventRequest(self._requestor_ref, stopref, timestamp(), numresults)
                 response = self._send_stop_event_request(request, ordertype)
@@ -124,10 +126,33 @@ class TripMonitorServer:
             return Response(content=json_result, media_type='application/json')
         except Exception as ex:
             return Response(content=str(ex), status_code=500)
+        
+    def _json_stopfinder(self, req: Request) -> Response:
 
-    def _send_stop_event_request(self, trias_request: StopEventRequest, order_type: str):
+        if 'q' not in req.query_params or req.query_params['q'].strip() == '':
+            return Response(status_code=400)
+
+        try:
+            request = LocationInformationRequest(self._requestor_ref, req.query_params['q'].strip())
+            response = self._send_location_information_request(request)
+
+            result = dict()
+            result['stops'] = response.stops
+
+            json_result = json.dumps(result)
+
+            self._logger.info(f'Returning JSON response from remote server for {req.url.path}')
+            return Response(content=json_result, media_type='application/json')
+        except Exception as ex:
+            return Response(content=str(ex), status_code=500)
+
+    def _send_stop_event_request(self, trias_request: StopEventRequest, order_type: str) -> StopEventResponse:
         response = requests.post(self._request_url, headers={'Content-Type': 'application/xml'}, data=trias_request.xml())
         return StopEventResponse(response.content, order_type)
+    
+    def _send_location_information_request(self, trias_request: LocationInformationRequest) -> LocationInformationResponse:
+        response = requests.post(self._request_url, headers={'Content-Type': 'application/xml'}, data=trias_request.xml())
+        return LocationInformationResponse(response.content)
 
     def create(self) -> FastAPI:
         self._fastapi.include_router(self._api_router)

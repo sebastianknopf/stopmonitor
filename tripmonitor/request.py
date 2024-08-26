@@ -1,6 +1,5 @@
 from abc import ABC
 from lxml.etree import tostring
-from lxml.etree import register_namespace
 from lxml.etree import Element
 from lxml.etree import SubElement
 from lxml.etree import QName
@@ -43,4 +42,22 @@ class StopEventRequest(ServiceRequest):
         SubElement(params, 'NumberOfResults').text = str(num_results)
         SubElement(params, 'StopEventType').text = 'departure'
         SubElement(params, 'IncludeRealtimeData').text = str(True).lower()
+
+class LocationInformationRequest(ServiceRequest):
+
+    def __init__(self, requestor_ref: str, location_name: str) -> None:
+        super().__init__(requestor_ref)
+
+        service_request = self.trias.find('.//ServiceRequest')
+
+        request_payload = SubElement(service_request, 'RequestPayload')
+        location_information_request = SubElement(request_payload, 'LocationInformationRequest')
+        initial_input = SubElement(location_information_request, 'InitialInput')
+        SubElement(initial_input, 'LocationName').text = location_name
+
+        restrictions = SubElement(location_information_request, 'Restrictions')
+        SubElement(restrictions, 'Type').text = 'stop'
+        SubElement(restrictions, 'NumberOfResults').text = str(15)
+        SubElement(restrictions, 'IncludePtModes').text = str(False).lower()
+
 
