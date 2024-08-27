@@ -7,9 +7,9 @@ app:
 landing:
   title: DemoTripMonitorInstance
   logo: /static/default/logo.svg
-  color: #2196F3
+  color: '#21a635'
   title_enabled: true
-  num_results_emabled: false
+  num_results_enabled: false
 admin:
   something: ComesHereSoon
 caching:

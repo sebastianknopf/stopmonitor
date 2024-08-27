@@ -1,0 +1,26 @@
+.autocomp {
+	background: #f8f8f8;
+	border-radius: 0 0 5px 5px;
+	border: 1px solid #ccc;
+	border-top: 0;
+	box-shadow: 2px 2px 2px #eee;
+	text-align: left;
+}
+
+.autocomp-item {
+	padding-bottom: 5px;
+	padding: 10px;
+	cursor: pointer;
+}
+
+.autocomp-item:hover,
+.autocomp-sel {
+	background: #f1f1f1;
+	font-weight: bold;
+}
+
+@media screen and (max-width: 900px) {
+	.container {
+		margin-top: 5vh;
+	}
+}

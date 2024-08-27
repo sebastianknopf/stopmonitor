@@ -28,6 +28,7 @@ class TripMonitorServer:
 
         self._fastapi = FastAPI()
         self._fastapi.mount('/app/static', StaticFiles(directory='static'), name='static')
+        self._fastapi.mount('/landing/static', StaticFiles(directory='landing'), name='landing')
         self._fastapi.mount('/templates', StaticFiles(directory='templates'), name='templates')
 
         self._api_router = APIRouter()
@@ -41,11 +42,12 @@ class TripMonitorServer:
             self._api_router.add_api_route('/admin', endpoint=self._admin, methods=['GET'])
 
         # enable required routes
-        self._api_router.add_api_route('/view/{template}', endpoint=self._view, methods=['GET'])
+        self._api_router.add_api_route('/view/{template}', endpoint=self._view, methods=['GET'], name='view')
         self._api_router.add_api_route('/json/stops.json', endpoint=self._json_stopfinder, methods=['GET'])
         self._api_router.add_api_route('/json/{datatype}/{ordertype}/{stopref}/{numresults}.json', endpoint=self._json_datafinder, methods=['GET'])
 
-        self._templates = Jinja2Templates(directory='templates')
+        self._template_engine = Jinja2Templates(directory='templates')
+        self._landing_engine = Jinja2Templates(directory='landing')
 
         # enable chaching if configured
         if self._config['app']['caching_enabled'] == True:
@@ -59,7 +61,21 @@ class TripMonitorServer:
         self._logger = logging.getLogger('uvicorn')
 
     def _index(self, request: Request) -> Response:
-        return 'Landing enabled'
+        template = 'landing.html'
+
+        ctx = dict()
+
+        # set landing page parameters
+        ctx['landing'] = dict()
+        ctx['landing']['title'] = self._config['landing']['title']
+        ctx['landing']['logo'] = self._config['landing']['logo']
+        ctx['landing']['color'] = self._config['landing']['color']
+
+        # set enabled / disabled flags for fields
+        ctx['landing']['title_enabled'] = self._config['landing']['title_enabled']
+        ctx['landing']['num_results_enabled'] = self._config['landing']['num_results_enabled']
+
+        return self._landing_engine.TemplateResponse(request=request, name=template, context=ctx)
     
     def _admin(self, request: Request) -> Response:
         return 'admin enabled'
@@ -84,7 +100,7 @@ class TripMonitorServer:
                 key = qp_name.replace('tx', '')
                 ctx['template'][key] = qp_value
 
-        return self._templates.TemplateResponse(request=request, name=template, context=ctx)
+        return self._template_engine.TemplateResponse(request=request, name=template, context=ctx)
 
     def _json_datafinder(self, datatype: str, stopref: str, ordertype: str, numresults: int, req: Request) -> Response:
         
