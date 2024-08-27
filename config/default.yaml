@@ -11,6 +11,7 @@ landing:
   default_template: 'default'
   title_enabled: true
   num_results_enabled: false
+  template_enabled: false
 admin:
   something: ComesHereSoon
 caching:
