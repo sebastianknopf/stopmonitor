@@ -7,7 +7,7 @@ html, body {
 }
 
 #header span {
-    font-size: 7em;
+    font-size: 6em;
     font-weight: bold;
     container-name: header
 }
@@ -21,11 +21,11 @@ html, body {
 }
 
 table thead {
-    font-size: 5em;
+    font-size: 4em;
 }
 
 table tbody {
-    font-size: 6em;
+    font-size: 5em;
 }
 
 table tbody td:last-child, table thead th:last-child {
@@ -72,10 +72,10 @@ table tbody .w3-round {
     }
     
     table thead {
-        font-size: 1.5em;
+        font-size: 1.1em;
     }
     
     table tbody {
-        font-size: 1.5em;
+        font-size: 1.1em;
     }
 }
