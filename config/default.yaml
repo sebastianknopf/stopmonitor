@@ -8,6 +8,7 @@ landing:
   title: DemoTripMonitorInstance
   logo: /static/default/logo.svg
   color: '#21a635'
+  default_template: 'default'
   title_enabled: true
   num_results_enabled: false
 admin:

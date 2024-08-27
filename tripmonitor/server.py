@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import requests
 import yaml
 
@@ -42,7 +43,9 @@ class TripMonitorServer:
             self._api_router.add_api_route('/admin', endpoint=self._admin, methods=['GET'])
 
         # enable required routes
+        self._api_router.add_api_route('/view', endpoint=self._view, methods=['GET'], name='view-baseurl')
         self._api_router.add_api_route('/view/{template}', endpoint=self._view, methods=['GET'], name='view')
+        
         self._api_router.add_api_route('/json/stops.json', endpoint=self._json_stopfinder, methods=['GET'])
         self._api_router.add_api_route('/json/{datatype}/{ordertype}/{stopref}/{numresults}.json', endpoint=self._json_datafinder, methods=['GET'])
 
@@ -70,10 +73,17 @@ class TripMonitorServer:
         ctx['landing']['title'] = self._config['landing']['title']
         ctx['landing']['logo'] = self._config['landing']['logo']
         ctx['landing']['color'] = self._config['landing']['color']
+        ctx['landing']['default_template'] = self._config['landing']['default_template']
 
         # set enabled / disabled flags for fields
         ctx['landing']['title_enabled'] = self._config['landing']['title_enabled']
         ctx['landing']['num_results_enabled'] = self._config['landing']['num_results_enabled']
+        ctx['landing']['template_enabled'] = self._config['landing']['template_enabled']
+
+        # add available templates
+        ctx['landing']['templates'] = list()
+        for directory in os.listdir('templates'):
+            ctx['landing']['templates'].append(directory)                
 
         return self._landing_engine.TemplateResponse(request=request, name=template, context=ctx)
     

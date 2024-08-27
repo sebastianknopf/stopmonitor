@@ -91,9 +91,14 @@
 					</div>
 					{% endif %}
 					{% if 'template_enabled' in landing and landing['template_enabled'] %}
-
+					<label for="input-template" class="w3-label"><b>Layout</b></label>
+					<select id="input-template" class="w3-select" onchange="updateLanding()">
+						{% for template in landing['templates'] %}
+						<option value="{{ template }}"{% if template == landing['default_template'] %} selected{% endif %}>{{ template }}</option>
+						{% endfor %}
+					</select>
 					{% else %}
-					<input type="hidden" id="input-template" value="default" />
+					<input type="hidden" id="input-template" value="{{ landing['default_template'] }}" />
 					{% endif %}
 					<div class="w3-padding-16">
 						<a id="link-open" class="w3-button w3-theme w3-round-large w3-mobile" target="_blank"><b>Öffnen</b></a>
@@ -112,7 +117,8 @@
 		var selectedStopRef = null;
 
 		function updateLanding() {
-			let localTargetUrl = '{{ url_for('view', template='default') }}?';
+			let templateId = document.getElementById('input-template').value;
+			let localTargetUrl = `{{ url_for('view-baseurl') }}/${templateId}?`;
 
 			let targetUrlParams = new URLSearchParams();
 			targetUrlParams.set('s', selectedStopRef);
