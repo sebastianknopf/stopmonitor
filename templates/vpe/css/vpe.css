@@ -1,0 +1,81 @@
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
+	
+html, body {
+    cursor: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#header span {
+    font-size: 7em;
+    font-weight: bold;
+    container-name: header
+}
+
+#header img {
+    height: 160px;
+}
+
+#clock {
+    width: 100px;
+}
+
+table thead {
+    font-size: 5em;
+}
+
+table tbody {
+    font-size: 6em;
+}
+
+table tbody td:last-child, table thead th:last-child {
+    padding-right: 30px !important;
+}
+
+table tbody .w3-round {
+    width: 200px;
+}
+
+@media only screen and (max-width: 1000px) {
+    #header span {
+        font-size: 4em;
+        font-weight: bold;
+        container-name: header
+    }
+    
+    #header img {
+        height: 85px;
+    }
+    
+    table thead {
+        font-size: 2em;
+    }
+    
+    table tbody {
+        font-size: 2em;
+    }
+
+    table tbody .w3-round {
+        width: 90px;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    #header span {
+        font-size: 2em;
+        font-weight: bold;
+        container-name: header
+    }
+    
+    #header img {
+        height: 45px;
+    }
+    
+    table thead {
+        font-size: 1.5em;
+    }
+    
+    table tbody {
+        font-size: 1.5em;
+    }
+}
