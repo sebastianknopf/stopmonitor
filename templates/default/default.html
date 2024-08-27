@@ -6,6 +6,37 @@
 		<meta name="viewport" content="width=device-width,initial-scale=1">
 		<link rel="stylesheet" href="{{ url_for('static', path='/css/w3.css') }}" />
 		<link rel="stylesheet" href="{{ url_for('templates', path='/default/css/default.css') }}" />
+		<style>
+			.w3-theme {
+				background: #21a635;
+				color: #ffffff;
+			}
+
+			.w3-single-line {
+				white-space: nowrap;
+				overflow: hidden;
+			}
+
+			.w3-local-bus {
+				background: #009de2;
+				color: #ffffff;
+			}
+
+			.w3-regional-bus {
+				background: #21a635;
+				color: #ffffff;
+			}
+
+			.w3-suburban-railway {
+				background: #c30a37;
+				color: #ffffff;
+			}
+
+			.w3-mode-fallback {
+				background: #888888;
+				color: #ffffff;
+			}
+		</style>
 	</head>
 	<body>
 		<header id="header" class="w3-cell-row w3-padding-16">
@@ -16,12 +47,12 @@
 				<span>{{ app['title'] }}</span>
 			</div>
 			<div class="w3-container w3-cell w3-right-align">
-				<img src="https://www.vpe.de/wp-content/uploads/2022/07/VPE_Verbindet_LOGO.svg" />
+				<img src="{{ url_for('templates', path='/default/img/default-icon.svg') }}" />
 			</div>
 		</header>
 		<main class="w3-main">
 			<table id="departures-table" class="w3-table w3-bordered">
-				<thead id="departures-table-header" class="w3-green">
+				<thead id="departures-table-header" class="w3-theme">
 					<tr>
 						<th class="w3-padding-16">Linie</th>
 						<th class="w3-padding-16">Richtung</th>
@@ -41,35 +72,35 @@
             <tr>
                 <td class="w3-padding-16">
                     <% if (sub_mode == 'localBus') { %>
-                    <span class="w3-tag w3-round w3-center w3-blue"><%= line_name %></span>
+                    <span class="w3-tag w3-round w3-center w3-single-line w3-local-bus"><%= line_name %></span>
                     <% } else if (sub_mode == 'regionalBus') { %>
-                    <span class="w3-tag w3-round w3-center w3-green"><%= line_name %></span>
+                    <span class="w3-tag w3-round w3-center w3-single-line w3-regional-bus"><%= line_name %></span>
                     <% } else if (sub_mode == 'suburbanRailway') { %>
-					<span class="w3-tag w3-round w3-center w3-red"><%= line_name %></span>
-					<% } else if (mode == 'rail') { %>
-					<span class="w3-tag w3-round w3-center w3-gray"><%= line_name %></span>
+					<span class="w3-tag w3-round w3-center w3-single-line w3-suburban-railway"><%= line_name %></span>
+					<% } else { %>
+					<span class="w3-tag w3-round w3-center w3-single-line w3-mode-fallback"><%= line_name %></span>
 					<% } %>
                 </td>
-                <td class="w3-padding-16"><%= destination_text %></td>
+                <td class="w3-padding-16 w3-single-line"><%= destination_text %></td>
 				<% if (realtime) { %>
 					<% if (!cancelled) { %>
 						<% estimated_departure_duration_minutes = Math.floor(moment.duration(moment(estimated_time, ['H:m:s']).diff(moment(new Date()))).asMinutes()) %>
 						<% if (estimated_departure_duration_minutes <= 0) { %>
-						<td class="w3-right-align w3-padding-16">sofort</td>
+						<td class="w3-right-align w3-padding-16 w3-single-line">sofort</td>
 						<% } else if (estimated_departure_duration_minutes < 10) { %>
-						<td class="w3-right-align w3-padding-16">in <%= estimated_departure_duration_minutes %>min</td>
+						<td class="w3-right-align w3-padding-16 w3-single-line">in <%= estimated_departure_duration_minutes %>min</td>
 						<% } else { %>
 						<% estimated_time_formatted = moment(planned_time, ['H:m:s']).format('HH:mm') %>
-						<td class="w3-right-align w3-padding-16"><%= estimated_time_formatted %></td>
+						<td class="w3-right-align w3-padding-16 w3-single-line"><%= estimated_time_formatted %></td>
 						<% } %>
 					<% } else { %>
-					<td class="w3-right-align w3-padding-16 w3-text-red">entfällt</td>
+					<td class="w3-right-align w3-padding-16 w3-text-red w3-single-line">entfällt</td>
 					<% } %>
 				<% } else { %>
 				<% planned_time_formatted = moment(planned_time, ['H:m:s']).format('HH:mm') %>
-				<td class="w3-right-align w3-padding-16"><%= planned_time_formatted %></td>
+				<td class="w3-right-align w3-padding-16 w3-single-line"><%= planned_time_formatted %></td>
 				<% } %>
-                <td class="w3-right-align w3-padding-16 w3-hide-small"><%= planned_bay %></td>
+                <td class="w3-right-align w3-padding-16 w3-single-line w3-hide-small"><%= planned_bay %></td>
             </tr>
             `;
 
