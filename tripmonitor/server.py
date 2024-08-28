@@ -151,6 +151,7 @@ class TripMonitorServer:
             self._logger.info(f'Returning JSON response from remote server for {req.url.path}')
             return Response(content=json_result, media_type='application/json')
         except Exception as ex:
+            self._logger.error(str(ex))
             return Response(content=str(ex), status_code=500)
         
     def _json_stopfinder(self, req: Request) -> Response:
@@ -170,6 +171,7 @@ class TripMonitorServer:
             self._logger.info(f'Returning JSON response from remote server for {req.url.path}')
             return Response(content=json_result, media_type='application/json')
         except Exception as ex:
+            self._logger.error(str(ex))
             return Response(content=str(ex), status_code=500)
 
     def _send_stop_event_request(self, trias_request: StopEventRequest, order_type: str) -> StopEventResponse:
