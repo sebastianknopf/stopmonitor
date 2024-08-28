@@ -13,6 +13,9 @@ def localtime(isotime: str|None) -> datetime.datetime:
     if isotime is None:
         return None
     
+    if isotime.endswith('Z'):
+        isotime = isotime[:-1] + '+00:00'
+    
     ts = datetime.datetime.fromisoformat(isotime)
     return ts.astimezone()
 
