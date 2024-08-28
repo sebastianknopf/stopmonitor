@@ -117,6 +117,10 @@
 		var selectedStopRef = null;
 
 		function updateLanding() {
+			if (selectedStopRef == null) {
+				return;
+			}
+		
 			let templateId = document.getElementById('input-template').value;
 			let localTargetUrl = `{{ url_for('view-baseurl') }}/${templateId}?`;
 
