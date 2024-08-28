@@ -1,5 +1,6 @@
 import datetime
 import zoneinfo
+import pytz
 
 def timestamp(additional_seconds=0) -> str:
     ts = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
@@ -9,15 +10,15 @@ def timestamp(additional_seconds=0) -> str:
     
     return ts.isoformat()
 
-def localtime(isotime: str|None) -> datetime.datetime:
+def localtime(isotime: str|None) -> datetime.datetime:    
     if isotime is None:
         return None
     
     if isotime.endswith('Z'):
         isotime = isotime[:-1] + '+00:00'
     
-    ts = datetime.datetime.fromisoformat(isotime)
-    return ts.astimezone()
+    ts = datetime.datetime.fromisoformat(isotime)    
+    return ts.astimezone(pytz.timezone('Europe/Berlin'))
 
 def interval(years: int, months: int, days: int, hours: int, minutes: int, seconds: int) -> str:
     result = 'P'
