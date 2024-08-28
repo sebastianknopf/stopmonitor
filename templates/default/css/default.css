@@ -78,4 +78,8 @@ table tbody .w3-round {
     table tbody {
         font-size: 1.1em;
     }
+
+    table tbody .w3-round {
+        width: 45px;
+    }
 }
