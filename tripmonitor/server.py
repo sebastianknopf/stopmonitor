@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import os
@@ -10,6 +11,8 @@ from fastapi import Request
 from fastapi import Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from lxml.etree import fromstring
+from lxml.etree import tostring
 
 from .isotime import timestamp
 from .request import StopEventRequest
@@ -53,13 +56,22 @@ class TripMonitorServer:
         self._landing_engine = Jinja2Templates(directory='landing')
 
         # enable chaching if configured
-        if self._config['app']['caching_enabled'] == True:
+        if 'caching_enabled' in self._config['app'] and self._config['app']['caching_enabled'] == True:
             import memcache
 
             self._cache = memcache.Client([self._config['caching']['caching_server_endpoint']], debug=0)
             self._cache_ttl = self._config['caching']['caching_server_ttl_seconds']
         else:
             self._cache = None
+
+        # enable data logging if configured
+        if 'datalog_enabled' in self._config['app'] and self._config['app']['datalog_enabled'] == True: 
+            if not os.path.exists('./datalog'):
+                os.makedirs('./datalog')
+
+            self._datalog = './datalog'
+        else:
+            self._datalog = None
 
         self._logger = logging.getLogger('uvicorn')
 
@@ -175,12 +187,51 @@ class TripMonitorServer:
             return Response(content=str(ex), status_code=500)
 
     def _send_stop_event_request(self, trias_request: StopEventRequest, order_type: str) -> StopEventResponse:
+
+        self._create_datalog('StopEventRequest', trias_request.xml())
         response = requests.post(self._request_url, headers={'Content-Type': 'application/xml'}, data=trias_request.xml())
+        
+        self._create_datalog('StopEventResponse', response.content)
         return StopEventResponse(response.content, order_type)
     
     def _send_location_information_request(self, trias_request: LocationInformationRequest) -> LocationInformationResponse:
+        
+        self._create_datalog('LocationInformationRequest', trias_request.xml())
         response = requests.post(self._request_url, headers={'Content-Type': 'application/xml'}, data=trias_request.xml())
+
+        self._create_datalog('LocationInformationResponse', response.content)
         return LocationInformationResponse(response.content)
+    
+    def _create_datalog(self, datatype: str, xml: str) -> None:
+        if self._datalog is not None:
+
+            # look for old datalog files and remove them
+            # for speed up, check for the filename not beginning with today instead of ressource consuming difference calculation
+            today = datetime.datetime.now().strftime('%Y-%m-%d')
+            for datalog_file in os.listdir(self._datalog):
+
+                # proceed only if the datalogfile is not from today
+                if not datalog_file.startswith(today):
+                    datalog_timestamp = datalog_file.split('_')[0]
+                    datalog_timestamp = datetime.datetime.strptime(datalog_timestamp, '%Y-%m-%d-%H.%M.%S-%f')
+
+                    difference = (datetime.datetime.now() - datalog_timestamp).total_seconds()
+                    if difference > 60 * 60 * 24:
+                        datalog_file = os.path.join(self._datalog, datalog_file)
+                        os.remove(datalog_file)
+
+            # generate new datalog file
+            datalog_timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H.%M.%S-%f')
+            datalog_filename = f"{datalog_timestamp}_{datatype}.xml"
+
+            with open(os.path.join(self._datalog, datalog_filename), 'wb') as datalog_file:
+                try:
+                    xml = tostring(fromstring(xml), pretty_print=True)
+                except Exception as ex:
+                    self._logger.error(str(ex))
+                finally:
+                    datalog_file.write(xml)
+                    datalog_file.close()
 
     def create(self) -> FastAPI:
         self._fastapi.include_router(self._api_router)

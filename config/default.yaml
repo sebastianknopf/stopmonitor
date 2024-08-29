@@ -4,6 +4,7 @@ app:
   landing_enabled: true
   admin_enabled: false
   caching_enabled: false
+  datalog_enabled: false
 landing:
   title: DemoTripMonitorInstance
   logo: /static/default/logo.svg
