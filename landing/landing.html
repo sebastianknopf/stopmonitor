@@ -5,56 +5,12 @@
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width,initial-scale=1">
 		<link rel="stylesheet" href="{{ url_for('static', path='/css/w3.css') }}" />
+		<link rel="stylesheet" href="{{ url_for('landing', path='/css/landing.css') }}">
 		<link rel="stylesheet" href="{{ url_for('landing', path='/css/autocomp.css') }}">
 		<style>
-		html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
-		
-		body {
-			height: 100%;
-			background: #f9f9f9;
-		}
-		
-		a {
-			text-decoration: none !important;
-		}
-
 		.w3-theme {
 			background: {{ landing['color'] }};
 			color: #ffffff;
-		}
-		
-		.w3-content {
-			max-width: 1700px !important;
-		}
-		
-		.w3-medium {
-			width: 50% !important;
-		}
-		
-		#div-wrapper-preview {
-			width: 100%;
-			height: 470px;
-			position: relative;
-		}
-		
-		#iframe-preview {
-			width: 100%;
-			height: 100%;
-			border: 0;
-		}
-		
-		@media only screen and (max-width: 1000px) {
-			.w3-medium {
-				width: 100% !important;
-				display: block;
-			}
-		}
-		
-		@media only screen and (max-width: 600px) {
-			.w3-medium {
-				width: 100% !important;
-				display: block;
-			}
 		}
 		</style>
 	</head>
@@ -75,7 +31,7 @@
 				<p class="w3-text-gray">Wählen Sie die Haltestelle, von der die Abfahrten angezeigt werden sollen.</p>
 				<form action="" method="GET">
 					{% if 'title_enabled' in landing and landing['title_enabled'] %}
-					<div class="w3-padding-16">
+					<div class="w3-padding-16 w3-hide-small">
 						<label for="input-title" class="w3-label"><b>Überschrift</b></label>
 						<input id="input-title" class="w3-input w3-round w3-border" type="text" placeholder="Abfahrten" onkeyup="updateLanding()" />
 					</div>
@@ -85,18 +41,20 @@
 						<input id="input-stop_ref" class="w3-input w3-round w3-border" type="text" placeholder="z.B. Pforzheim Leopoldplatz" />
 					</div>
 					{% if 'num_results_enabled' in landing and landing['num_results_enabled'] %}
-					<div class="w3-padding-16">
+					<div class="w3-padding-16 w3-hide-small">
 						<label for="input-num_results" class="w3-label"><b>Anzahl Abfahrten</b></label>
 						<input id="input-num_results" class="w3-input w3-round w3-border" type="number" placeholder="10" onkeyup="updateLanding()" />
 					</div>
 					{% endif %}
 					{% if 'template_enabled' in landing and landing['template_enabled'] %}
-					<label for="input-template" class="w3-label"><b>Layout</b></label>
-					<select id="input-template" class="w3-select" onchange="updateLanding()">
-						{% for template in landing['templates'] %}
-						<option value="{{ template }}"{% if template == landing['default_template'] %} selected{% endif %}>{{ template }}</option>
-						{% endfor %}
-					</select>
+					<div class="w3-padding-16 w3-hide-small">
+						<label for="input-template" class="w3-label"><b>Layout</b></label>
+						<select id="input-template" class="w3-select" onchange="updateLanding()">
+							{% for template in landing['templates'] %}
+							<option value="{{ template }}"{% if template == landing['default_template'] %} selected{% endif %}>{{ template }}</option>
+							{% endfor %}
+						</select>
+					</div>
 					{% else %}
 					<input type="hidden" id="input-template" value="{{ landing['default_template'] }}" />
 					{% endif %}
@@ -105,10 +63,10 @@
 					</div>
 				</form>
 			</div>
-			<div class="w3-container w3-cell w3-medium w3-animate-left">
+			<div class="w3-container w3-cell w3-medium w3-animate-left w3-hide-medium w3-hide-small">
 				<h2><b>Vorschau</b></h2>
 				<div id="div-wrapper-preview">
-					<iframe src="" id="iframe-preview"></iframe>
+					<iframe class="w3-hide-medium w3-hide-small" src="" id="iframe-preview"></iframe>
 				</div>
 			</div>
 		</main>
@@ -139,11 +97,17 @@
 
 			localTargetUrl = localTargetUrl + targetUrlParams;
 
+			// update open link in general
 			let linkOpen = document.getElementById('link-open');
 			linkOpen.href = localTargetUrl;
 
+			// update preview only if it is visible at all
 			let iframePreview = document.getElementById('iframe-preview');
-			iframePreview.src = localTargetUrl;
+			let iframePreviewVisible = window.getComputedStyle(iframePreview).display != 'none';
+
+			if (iframePreviewVisible) {
+				iframePreview.src = localTargetUrl;
+			}
 		}
 
 		autocomp(document.getElementById('input-stop_ref'), {
