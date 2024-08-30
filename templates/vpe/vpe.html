@@ -68,6 +68,12 @@
         <script src="{{ url_for('static', path='/js/tripmonitor.js') }}" type="text/javascript"></script>
         <script>
         let departureTemplate = `
+	    <% if (realtime && estimated_time != null) { %>
+            <% departure_duration_minutes = moment.duration(moment(estimated_time, ['H:m:s']).diff(moment(new Date()))).asMinutes() %>
+	    <% } else { %>
+            <% departure_duration_minutes = moment.duration(moment(planned_time, ['H:m:s']).diff(moment(new Date()))).asMinutes() %>
+	    <% } %>
+            <% if (departure_duration_minutes > 0.5) { %>
             <tr>
                 <td class="w3-padding-16" style="vertical-align: middle;">
                     <% if (sub_mode == 'localBus') { %>
@@ -83,13 +89,12 @@
                 <td class="w3-padding-16 w3-single-line" style="vertical-align: middle;"><%= destination_text %></td>
 				<% if (realtime) { %>
 					<% if (!cancelled) { %>
-						<% estimated_departure_duration_minutes = Math.floor(moment.duration(moment(estimated_time, ['H:m:s']).diff(moment(new Date()))).asMinutes()) %>
-						<% if (estimated_departure_duration_minutes <= 0) { %>
+						<% if (departure_duration_minutes < 1) { %>
 						<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;">sofort</td>
-						<% } else if (estimated_departure_duration_minutes < 10) { %>
-						<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;">in <%= estimated_departure_duration_minutes %>min</td>
+						<% } else if (departure_duration_minutes < 10) { %>
+						<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;">in <%= Math.floor(estimated_departure_duration_minutes) %>min</td>
 						<% } else { %>
-						<% estimated_time_formatted = moment(planned_time, ['H:m:s']).format('HH:mm') %>
+						<% estimated_time_formatted = moment(estimated_time, ['H:m:s']).format('HH:mm') %>
 						<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;"><%= estimated_time_formatted %></td>
 						<% } %>
 					<% } else { %>
@@ -101,6 +106,7 @@
 				<% } %>
                 <td class="w3-right-align w3-padding-16 w3-single-line w3-hide-small" style="vertical-align: middle;"><%= planned_bay %></td>
             </tr>
+	    <% } %>
             `;
 
 		let noDeparturesTemplate = `
