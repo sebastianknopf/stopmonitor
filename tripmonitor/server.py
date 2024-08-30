@@ -75,7 +75,7 @@ class TripMonitorServer:
 
         self._logger = logging.getLogger('uvicorn')
 
-    def _index(self, request: Request) -> Response:
+    async def _index(self, request: Request) -> Response:
         template = 'landing.html'
 
         ctx = dict()
@@ -99,21 +99,20 @@ class TripMonitorServer:
 
         return self._landing_engine.TemplateResponse(request=request, name=template, context=ctx)
     
-    def _admin(self, request: Request) -> Response:
+    async def _admin(self, request: Request) -> Response:
         return 'admin enabled'
 
-    def _view(self, template: str, request: Request) -> Response:
+    async def _view(self, template: str, request: Request) -> Response:
         template = f"{template}/{template}.html"
 
         ctx = dict()
 
         # set app general variables
-        ctx['app'] = dict()
-        ctx['app']['title'] = request.query_params['t'] if 't' in request.query_params else 'Abfahrten'
-        ctx['app']['stop_ref'] = request.query_params['s'] if 's' in request.query_params else 'de:08231:11'
-        ctx['app']['num_results'] = request.query_params['n'] if 'n' in request.query_params and request.query_params['n'].isdigit() else 10
-        ctx['app']['mode_filter'] = request.query_params['m'] if 'm' in request.query_params and request.query_params['m'] else None
-        ctx['app']['update_frequency'] = request.query_params['u'] if 'u' in request.query_params and request.query_params['u'].isdigit() else 30
+        ctx['view'] = dict()
+        ctx['view']['title'] = request.query_params['t'] if 't' in request.query_params else 'Abfahrten'
+        ctx['view']['stop_ref'] = request.query_params['s'] if 's' in request.query_params else 'de:08231:11'
+        ctx['view']['num_results'] = request.query_params['n'] if 'n' in request.query_params and request.query_params['n'].isdigit() else 10
+        ctx['view']['update_frequency'] = request.query_params['u'] if 'u' in request.query_params and request.query_params['u'].isdigit() else 30
 
         # append template specific variables
         ctx['template'] = dict()
@@ -124,7 +123,7 @@ class TripMonitorServer:
 
         return self._template_engine.TemplateResponse(request=request, name=template, context=ctx)
 
-    def _json_datafinder(self, datatype: str, stopref: str, ordertype: str, numresults: int, req: Request) -> Response:
+    async def _json_datafinder(self, datatype: str, stopref: str, ordertype: str, numresults: int, req: Request) -> Response:
         
         if self._cache is not None:
             json_cached = self._cache.get(req.url.path)
@@ -147,7 +146,7 @@ class TripMonitorServer:
         try:
             if datatype == 'departures':                
                 request = StopEventRequest(self._requestor_ref, stopref, timestamp(), numresults)
-                response = self._send_stop_event_request(request, ordertype)
+                response = await self._send_stop_event_request(request, ordertype)
 
                 result = dict()
                 result['departures'] = response.departures
@@ -166,14 +165,14 @@ class TripMonitorServer:
             self._logger.error(str(ex))
             return Response(content=str(ex), status_code=500)
         
-    def _json_stopfinder(self, req: Request) -> Response:
+    async def _json_stopfinder(self, req: Request) -> Response:
 
         if 'q' not in req.query_params or req.query_params['q'].strip() == '':
             return Response(status_code=400)
 
         try:
             request = LocationInformationRequest(self._requestor_ref, req.query_params['q'].strip())
-            response = self._send_location_information_request(request)
+            response = await self._send_location_information_request(request)
 
             result = dict()
             result['stops'] = response.stops
@@ -186,23 +185,23 @@ class TripMonitorServer:
             self._logger.error(str(ex))
             return Response(content=str(ex), status_code=500)
 
-    def _send_stop_event_request(self, trias_request: StopEventRequest, order_type: str) -> StopEventResponse:
+    async def _send_stop_event_request(self, trias_request: StopEventRequest, order_type: str) -> StopEventResponse:
 
-        self._create_datalog('StopEventRequest', trias_request.xml())
+        await self._create_datalog('StopEventRequest', trias_request.xml())
         response = requests.post(self._request_url, headers={'Content-Type': 'application/xml'}, data=trias_request.xml())
         
-        self._create_datalog('StopEventResponse', response.content)
+        await self._create_datalog('StopEventResponse', response.content)
         return StopEventResponse(response.content, order_type)
     
-    def _send_location_information_request(self, trias_request: LocationInformationRequest) -> LocationInformationResponse:
+    async def _send_location_information_request(self, trias_request: LocationInformationRequest) -> LocationInformationResponse:
         
-        self._create_datalog('LocationInformationRequest', trias_request.xml())
+        await self._create_datalog('LocationInformationRequest', trias_request.xml())
         response = requests.post(self._request_url, headers={'Content-Type': 'application/xml'}, data=trias_request.xml())
 
-        self._create_datalog('LocationInformationResponse', response.content)
+        await self._create_datalog('LocationInformationResponse', response.content)
         return LocationInformationResponse(response.content)
     
-    def _create_datalog(self, datatype: str, xml: str) -> None:
+    async def _create_datalog(self, datatype: str, xml: str) -> None:
         if self._datalog is not None:
 
             # look for old datalog files and remove them

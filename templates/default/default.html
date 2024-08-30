@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 	<head>
-		<title>{{ app['title'] }}</title>
+		<title>{{ view['title'] }}</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width,initial-scale=1">
 		<link rel="stylesheet" href="{{ url_for('static', path='/css/w3.css') }}" />
@@ -14,7 +14,6 @@
 
 			.w3-single-line {
 				white-space: nowrap;
-				overflow: hidden;
 			}
 
 			.w3-local-bus {
@@ -44,7 +43,7 @@
 				<span id="clock-content">HH:MM</span>
 			</div>
 			<div class="w3-container w3-cell">
-				<span>{{ app['title'] }}</span>
+				<span>{{ view['title'] }}</span>
 			</div>
 			<div class="w3-container w3-cell w3-right-align">
 				<img src="{{ url_for('templates', path='/default/img/default-icon.svg') }}" />
@@ -70,7 +69,7 @@
         <script>
         let departureTemplate = `
             <tr>
-                <td class="w3-padding-16">
+                <td class="w3-padding-16" style="vertical-align: middle;">
                     <% if (sub_mode == 'localBus') { %>
                     <span class="w3-tag w3-round w3-center w3-single-line w3-local-bus"><%= line_name %></span>
                     <% } else if (sub_mode == 'regionalBus') { %>
@@ -81,32 +80,32 @@
 					<span class="w3-tag w3-round w3-center w3-single-line w3-mode-fallback"><%= line_name %></span>
 					<% } %>
                 </td>
-                <td class="w3-padding-16 w3-single-line"><%= destination_text %></td>
+                <td class="w3-padding-16 w3-single-line" style="vertical-align: middle;"><%= destination_text %></td>
 				<% if (realtime) { %>
 					<% if (!cancelled) { %>
 						<% estimated_departure_duration_minutes = Math.floor(moment.duration(moment(estimated_time, ['H:m:s']).diff(moment(new Date()))).asMinutes()) %>
 						<% if (estimated_departure_duration_minutes <= 0) { %>
-						<td class="w3-right-align w3-padding-16 w3-single-line">sofort</td>
+						<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;">sofort</td>
 						<% } else if (estimated_departure_duration_minutes < 10) { %>
-						<td class="w3-right-align w3-padding-16 w3-single-line">in <%= estimated_departure_duration_minutes %>min</td>
+						<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;">in <%= estimated_departure_duration_minutes %>min</td>
 						<% } else { %>
 						<% estimated_time_formatted = moment(planned_time, ['H:m:s']).format('HH:mm') %>
-						<td class="w3-right-align w3-padding-16 w3-single-line"><%= estimated_time_formatted %></td>
+						<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;"><%= estimated_time_formatted %></td>
 						<% } %>
 					<% } else { %>
-					<td class="w3-right-align w3-padding-16 w3-text-red w3-single-line">entfällt</td>
+					<td class="w3-right-align w3-padding-16 w3-text-red w3-single-line" style="vertical-align: middle;">entfällt</td>
 					<% } %>
 				<% } else { %>
 				<% planned_time_formatted = moment(planned_time, ['H:m:s']).format('HH:mm') %>
-				<td class="w3-right-align w3-padding-16 w3-single-line"><%= planned_time_formatted %></td>
+				<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;"><%= planned_time_formatted %></td>
 				<% } %>
-                <td class="w3-right-align w3-padding-16 w3-single-line w3-hide-small"><%= planned_bay %></td>
+                <td class="w3-right-align w3-padding-16 w3-single-line w3-hide-small" style="vertical-align: middle;"><%= planned_bay %></td>
             </tr>
             `;
 
 		let noDeparturesTemplate = `
 			<tr>
-				<td class="w3-padding-16" colspan="4">
+				<td class="w3-padding-16" colspan="4" style="vertical-align: middle;">
 					<div class="w3-cell-row w3-center" style="height:800px">
 						<div class="w3-container w3-cell w3-cell-middle">Aktuell stehen keine weiteren Abfahrten an.</div>
 					</div>
@@ -114,8 +113,8 @@
 			</tr>
 			`;
         
-        let tm = new TripMonitor('{{ app['stop_ref'] }}', {{ app['num_results'] }});
-        tm.updateDepartures(departureTemplate, {{ app['update_frequency'] }}, function(html, numResults) {
+        let tm = new TripMonitor('{{ view['stop_ref'] }}', {{ view['num_results'] }});
+        tm.updateDepartures(departureTemplate, {{ view['update_frequency'] }}, function(html, numResults) {
             departuresTableContent = document.getElementById('departures-table-content');
 
 			if (numResults > 0) {
