@@ -92,7 +92,7 @@
 						<% if (departure_duration_minutes < 1) { %>
 						<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;">sofort</td>
 						<% } else if (departure_duration_minutes < 10) { %>
-						<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;">in <%= Math.floor(estimated_departure_duration_minutes) %>min</td>
+						<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;">in <%= Math.floor(departure_duration_minutes) %>min</td>
 						<% } else { %>
 						<% estimated_time_formatted = moment(estimated_time, ['H:m:s']).format('HH:mm') %>
 						<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;"><%= estimated_time_formatted %></td>
