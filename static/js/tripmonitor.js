@@ -37,7 +37,7 @@ class TripMonitor {
 			return;
 		}
 		
-		if (this.pageHidden || document.hidden) {
+		if (/*this.pageHidden || */document.hidden) {
 			return;
 		}
 		
