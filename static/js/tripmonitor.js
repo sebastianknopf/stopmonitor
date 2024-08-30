@@ -5,6 +5,17 @@ class TripMonitor {
         this.orderType = orderType;
 		
 		this.updateRunningCurrently = false;
+		
+		this.pageHidden = false;
+		
+		let t = this;
+		window.addEventListener('focus', function() {
+			t.pageHidden = false;
+		}, false);
+		
+		window.addEventListener('blur', function() {
+			t.pageHidden = true;
+		}, false);
     }
 
     updateDepartures(departureTemplate, udpateFrequency, callback) {
@@ -23,6 +34,10 @@ class TripMonitor {
 
     async updateDeparturesAsync(callback) {
         if (this.updateRunningCurrently) {
+			return;
+		}
+		
+		if (this.pageHidden || document.hidden) {
 			return;
 		}
 		
@@ -51,7 +66,7 @@ class TripMonitor {
 					destination_text: departure.destination_text
 				});
 			});
-
+			
 			callback(html, result.departures.length);
 		} catch (error) {
 			callback(html, 0);
