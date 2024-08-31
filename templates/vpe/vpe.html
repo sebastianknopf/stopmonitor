@@ -69,11 +69,13 @@
         <script>
         let departureTemplate = `
 	    <% if (realtime && estimated_time != null) { %>
-            <% departure_duration_minutes = moment.duration(moment(estimated_time, ['H:m:s']).diff(moment(new Date()))).asMinutes() %>
+            <% departure_duration_minutes = moment.duration(moment(estimated_date + ' ' + estimated_time, ['YYYY-MM-DD H:m:s']).diff(moment(new Date()))).asMinutes() %>
+			<% console.log(departure_duration_minutes) ?>
 	    <% } else { %>
-            <% departure_duration_minutes = moment.duration(moment(planned_time, ['H:m:s']).diff(moment(new Date()))).asMinutes() %>
+            <% departure_duration_minutes = moment.duration(moment(planned_date + ' ' + planned_time, ['YYYY-MM-DD H:m:s']).diff(moment(new Date()))).asMinutes() %>
+			<% console.log(departure_duration_minutes) ?>
 	    <% } %>
-            <% if (departure_duration_minutes > 0.5) { %>
+		<% if (departure_duration_minutes > 0.5) { %>
             <tr>
                 <td class="w3-padding-16" style="vertical-align: middle;">
                     <% if (sub_mode == 'localBus') { %>
@@ -107,7 +109,7 @@
                 <td class="w3-right-align w3-padding-16 w3-single-line w3-hide-small" style="vertical-align: middle;"><%= planned_bay %></td>
             </tr>
 	    <% } %>
-            `;
+        `;
 
 		let noDeparturesTemplate = `
 			<tr>

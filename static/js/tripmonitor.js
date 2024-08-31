@@ -52,7 +52,9 @@ class TripMonitor {
 
 			_.forEach(result.departures, function (departure) {
 				html += t.departureTemplate({
+					planned_date: departure.planned_date,
 					planned_time: departure.planned_time,
+					estimated_date: departure.estimated_date,
 					estimated_time: departure.estimated_time,
 					realtime: departure.realtime,
 					cancelled: departure.cancelled,

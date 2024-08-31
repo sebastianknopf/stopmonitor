@@ -37,8 +37,10 @@ class StopEventResponse(TriasResponse):
             # extract planned and estimated departure time and several other departure information
             planned_time = localtime(self._extract(stop_event, './/ThisCall/CallAtStop/ServiceDeparture/TimetabledTime', None))
             estimated_time = localtime(self._extract(stop_event, './/ThisCall/CallAtStop/ServiceDeparture/EstimatedTime', None))
-                                       
+
+            departure['planned_date'] = planned_time.strftime('%Y-%m-%d') 
             departure['planned_time'] = planned_time.strftime('%H:%M:%S')
+            departure['estimated_date'] = estimated_time.strftime('%Y-%m-%d') if estimated_time is not None else None
             departure['estimated_time'] = estimated_time.strftime('%H:%M:%S') if estimated_time is not None else None
             departure['planned_bay'] = self._extract(stop_event, './/ThisCall/CallAtStop/PlannedBay/Text', None)
             departure['estimated_bay'] = self._extract(stop_event, './/ThisCall/CallAtStop/EstimatedBay/Text', None)

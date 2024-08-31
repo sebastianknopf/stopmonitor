@@ -1,5 +1,4 @@
 import datetime
-import zoneinfo
 import pytz
 
 def timestamp(additional_seconds=0) -> str:
