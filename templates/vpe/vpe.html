@@ -73,7 +73,7 @@
 	    <% } else { %>
             <% departure_duration_minutes = moment.duration(moment(planned_date + ' ' + planned_time, ['YYYY-MM-DD H:m:s']).diff(moment(new Date()))).asMinutes() %>
 	    <% } %>
-		<% if (departure_duration_minutes > 0.5) { %>
+		<% if (departure_duration_minutes > 0) { %>
             <tr>
                 <td class="w3-padding-16" style="vertical-align: middle;">
                     <% if (sub_mode == 'localBus') { %>
