@@ -70,10 +70,8 @@
         let departureTemplate = `
         <% if (realtime && estimated_time != null) { %>
             <% departure_duration_minutes = moment.duration(moment(estimated_date + ' ' + estimated_time, ['YYYY-MM-DD H:m:s']).diff(moment(new Date()))).asMinutes() %>
-			<% console.log(departure_duration_minutes) ?>
 	    <% } else { %>
             <% departure_duration_minutes = moment.duration(moment(planned_date + ' ' + planned_time, ['YYYY-MM-DD H:m:s']).diff(moment(new Date()))).asMinutes() %>
-			<% console.log(departure_duration_minutes) ?>
 	    <% } %>
 		<% if (departure_duration_minutes > 0.5) { %>
             <tr>
