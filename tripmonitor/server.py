@@ -188,7 +188,7 @@ class TripMonitorServer:
     async def _send_stop_event_request(self, trias_request: StopEventRequest, order_type: str) -> StopEventResponse:
 
         await self._create_datalog('StopEventRequest', trias_request.xml())
-        response = requests.post(self._request_url, headers={'Content-Type': 'application/xml'}, data=trias_request.xml())
+        response = requests.post(self._request_url, headers={'Content-Type': 'application/xml', 'User-Agent': 'TripMonitorServer/1'}, data=trias_request.xml())
         
         await self._create_datalog('StopEventResponse', response.content)
         return StopEventResponse(response.content, order_type)
@@ -196,7 +196,7 @@ class TripMonitorServer:
     async def _send_location_information_request(self, trias_request: LocationInformationRequest) -> LocationInformationResponse:
         
         await self._create_datalog('LocationInformationRequest', trias_request.xml())
-        response = requests.post(self._request_url, headers={'Content-Type': 'application/xml'}, data=trias_request.xml())
+        response = requests.post(self._request_url, headers={'Content-Type': 'application/xml', 'User-Agent': 'TripMonitorServer/1'}, data=trias_request.xml())
 
         await self._create_datalog('LocationInformationResponse', response.content)
         return LocationInformationResponse(response.content)
