@@ -119,6 +119,9 @@
 			</tr>
 			`;
         
+		let spanClockInitial = document.getElementById('clock-content');
+		spanClockInitial.innerHTML = moment().format('HH:mm');
+		
         let tm = new TripMonitor('{{ view['stop_ref'] }}', {{ view['num_results'] }});
         tm.updateDepartures(departureTemplate, {{ view['update_frequency'] }}, function(html, numResults) {
             departuresTableContent = document.getElementById('departures-table-content');
