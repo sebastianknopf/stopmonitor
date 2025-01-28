@@ -6,7 +6,7 @@ app:
   caching_enabled: false
   datalog_enabled: false
 landing:
-  title: DemoTripMonitorInstance
+  title: DemoStopMonitorInstance
   logo: /static/default/logo.svg
   color: '#21a635'
   default_template: 'default'

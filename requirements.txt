@@ -1,5 +1,7 @@
-pyyaml
+click
 fastapi[all]
 lxml
-requests
 pytz
+pyyaml
+requests
+uvicorn

@@ -20,7 +20,7 @@ from .request import LocationInformationRequest
 from .response import StopEventResponse
 from .response import LocationInformationResponse
 
-class TripMonitorServer:
+class StopMonitorServer:
 
     def __init__(self, config_filename: str):
         
@@ -50,7 +50,7 @@ class TripMonitorServer:
         self._api_router.add_api_route('/view/{template}', endpoint=self._view, methods=['GET'], name='view')
         
         self._api_router.add_api_route('/json/stops.json', endpoint=self._json_stopfinder, methods=['GET'])
-        self._api_router.add_api_route('/json/{datatype}/{ordertype}/{stopref}/{numresults}.json', endpoint=self._json_datafinder, methods=['GET'])
+        self._api_router.add_api_route('/json/{datatype}/{ordertype}/{stopref}/{numresults}.json', endpoint=self._json_departurefinder, methods=['GET'])
 
         self._template_engine = Jinja2Templates(directory='templates')
         self._landing_engine = Jinja2Templates(directory='landing')
@@ -123,7 +123,7 @@ class TripMonitorServer:
 
         return self._template_engine.TemplateResponse(request=request, name=template, context=ctx)
 
-    async def _json_datafinder(self, datatype: str, stopref: str, ordertype: str, numresults: int, req: Request) -> Response:
+    async def _json_departurefinder(self, datatype: str, stopref: str, ordertype: str, numresults: int, req: Request) -> Response:
         
         if self._cache is not None:
             json_cached = self._cache.get(req.url.path)
