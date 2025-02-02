@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stopmonitor"
+description = "A simple departure monitor based on public available interfaces."
+authors = [{ name = "Sebastian Knopf", email = "mail@sebastian-knopf.de" }]
+readme = "README.md"
+license = {text = "Apache License (2.0)"}
+dependencies = [
+    "click",
+    "fastapi[all]",
+    "lxml",
+    "pytz",
+    "pyyaml",
+    "requests",
+    "uvicorn",
+]
+requires-python = ">=3.10"
+
+dynamic = ["version"]
+
+[tool.setuptools]
+packages = ["stopmonitor"]
+
+[tool.setuptools.package-dir]
+stopmonitor = "stopmonitor"
+
+[tool.setuptools_scm]
+write_to = "stopmonitor/version.py"
+

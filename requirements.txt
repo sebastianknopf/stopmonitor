@@ -1,7 +1,0 @@
-click
-fastapi[all]
-lxml
-pytz
-pyyaml
-requests
-uvicorn

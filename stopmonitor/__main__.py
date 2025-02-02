@@ -1,9 +1,11 @@
 import click
 import uvicorn
 
-from .server import StopMonitorServer
+from stopmonitor.server import StopMonitorServer
+from stopmonitor.version import version
 
 @click.group()
+@click.version_option(version)
 def cli():
     pass
 

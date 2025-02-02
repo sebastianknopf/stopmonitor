@@ -1,20 +1,20 @@
 app:
-  remote_server_endpoint: [YourRemoteServerEndpoint]
-  remote_server_requestor_ref: [YourRemoteServerRequestorRef]
-  landing_enabled: true
-  admin_enabled: false
-  caching_enabled: false
-  datalog_enabled: false
+  remote_server_endpoint: [YourRemoteServerEndpoint]            # endpoint URL of the remote server delivering data
+  remote_server_requestor_ref: [YourRemoteServerRequestorRef]   # requestor reference for the remote server
+  landing_enabled: true                                         # enable/disable the landing page
+  admin_enabled: false                                          # enable/disable the admin area (not implemented yet!)
+  caching_enabled: false                                        # enable/disable caching using memcached, see section caching for more information
+  datalog_enabled: false                                        # enable/disable datalog. Every request and response from the remote server is logged into ./datalog
 landing:
-  title: DemoStopMonitorInstance
-  logo: /static/default/logo.svg
-  color: '#21a635'
-  default_template: 'default'
-  title_enabled: true
-  num_results_enabled: false
-  template_enabled: false
+  title: DemoStopMonitorInstance                                # title for the landing page
+  logo: /static/default/logo.svg                                # image for the landing page
+  color: '#21a635'                                              # primary color for the landing page
+  default_template: 'default'                                   # default template name
+  title_enabled: true                                           # enable/disable user input for title
+  num_results_enabled: false                                    # enable/disable user input for number of departures
+  template_enabled: false                                       # enable/disable user selection for templates
 admin:
   something: ComesHereSoon
-caching:
-  caching_server_endpoint: [YourCachingServerEndpoint]
-  caching_server_ttl_seconds: 30
+caching:                                                  
+  caching_server_endpoint: [YourCachingServerEndpoint]          # endpoint URL or IP address for memcached server
+  caching_server_ttl_seconds: 30                                # Time To Live (TTL) seconds for each cache entry

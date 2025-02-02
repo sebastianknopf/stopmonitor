@@ -206,6 +206,7 @@ pip-selfcheck.json
 
 # project specific
 /config/demo.yaml
+/config/dev.yaml
 /datalog/*
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python,venv
