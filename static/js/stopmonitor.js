@@ -1,4 +1,4 @@
-class TripMonitor {
+class StopMonitor {
     constructor(stopRef, numResults, orderType = 'estimated_time') {
         this.stopRef = stopRef;
         this.numResults = numResults;
