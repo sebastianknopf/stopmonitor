@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -7,6 +8,7 @@ from fastapi import APIRouter
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import Response
+from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -54,6 +56,8 @@ class StopMonitorServer:
         
         self._api_router.add_api_route('/json/stops.json', endpoint=self._json_stoprequest, methods=['GET'])
         self._api_router.add_api_route('/json/{datatype}/{ordertype}/{stopref}/{numresults}.json', endpoint=self._json_datarequest, methods=['GET'])
+
+        self._api_router.add_api_websocket_route('/ws/{ordertype}/{numresults}/{stopref}', endpoint=self._websocket)
 
         self._template_engine = Jinja2Templates(directory='templates')
         self._landing_engine = Jinja2Templates(directory='landing')
@@ -198,6 +202,22 @@ class StopMonitorServer:
         except Exception as ex:
             self._logger.error(str(ex))
             return Response(content=str(ex), status_code=500)
+        
+    async def _websocket(self, ordertype: str, numresults: int, stopref: str, ws: WebSocket):
+        await ws.accept()
+
+        try:
+            while True:
+                await ws.send_json({
+                    'order_type': ordertype,
+                    'num_results': numresults,
+                    'stop_ref': stopref
+                })
+
+                await asyncio.sleep(30)
+
+        except WebSocketDisconnect:
+            pass
 
     def _default_config(self, config):
         default_config = {
