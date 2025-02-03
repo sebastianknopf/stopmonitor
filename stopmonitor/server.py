@@ -18,6 +18,8 @@ class StopMonitorServer:
         with open(config_filename, 'r') as config_file:
             self._config = yaml.safe_load(config_file)
 
+        self._config = self._default_config(self._config)
+
         # create adapter according to settings
         if self._config['app']['adapter']['type'] == 'vdv431':
             from .adapter.vdv431.api import Vdv431Adapter
