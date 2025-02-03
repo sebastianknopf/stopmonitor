@@ -13,9 +13,10 @@ from fastapi.templating import Jinja2Templates
 class StopMonitorServer:
 
     def __init__(self, config_filename: str):
-        
+    
+        # load config and set default values
         with open(config_filename, 'r') as config_file:
-            self._config = yaml.safe_load(config_file) 
+            self._config = yaml.safe_load(config_file)
 
         # create adapter according to settings
         if self._config['app']['adapter']['type'] == 'vdv431':
@@ -195,6 +196,45 @@ class StopMonitorServer:
         except Exception as ex:
             self._logger.error(str(ex))
             return Response(content=str(ex), status_code=500)
+
+    def _default_config(self, config):
+        default_config = {
+            'app': {
+                'adapter': {
+                    'type': 'vdv431',
+                    'endpoint': '[YourRemoteServerEndpoint]',
+                    'api_key': '[YourRemoteServerApiKey]'
+                },
+                'landing_enabled': True,
+                'admin_enabled': False,
+                'caching_enabled': False,
+                'datalog_enabled': False
+            },
+            'landing': {
+                'title': 'DemoStopMonitorInstance',
+                'logo': '/static/default/logo.svg',
+                'color': '#21a635',
+                'default_template': 'default',
+                'title_enabled': True,
+                'num_results_enabled': False,
+                'template_enabled': False
+            },
+            'admin': {
+                'something': 'ComesHereSoon'
+            },
+            'caching': {
+                'caching_server_endpoint': '[YourCachingServerEndpoint]',
+                'caching_server_ttl_seconds': 30
+            }
+        }
+
+        return self._merge_config(default_config, config)
+
+    def _merge_config(self, defaults, actual):
+        if isinstance(defaults, dict) and isinstance(actual, dict):
+            return {k: self._merge_config(defaults.get(k, {}), actual.get(k, {})) for k in set(defaults) | set(actual)}
+        return actual if actual else defaults
+
 
     def create(self) -> FastAPI:
         self._fastapi.include_router(self._api_router)
