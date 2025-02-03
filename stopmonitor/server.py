@@ -208,12 +208,17 @@ class StopMonitorServer:
 
         try:
             while True:
-                await ws.send_json({
-                    'order_type': ordertype,
-                    'num_results': numresults,
-                    'stop_ref': stopref
-                })
+                # load departures from adapter
+                result = await self._adapter.find_departures(
+                    stopref,
+                    numresults,
+                    ordertype
+                )
 
+                # send results to monitor
+                await ws.send_json(result)
+
+                # wait for the next update interval
                 await asyncio.sleep(30)
 
         except WebSocketDisconnect:
