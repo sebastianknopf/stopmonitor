@@ -8,10 +8,12 @@ from .request import LocationInformationRequest
 from .response import StopEventResponse
 from .response import LocationInformationResponse
 
+from stopmonitor.adapter.base import AdapterInterface
+
 from lxml.etree import fromstring
 from lxml.etree import tostring
 
-class Vdv431Adapter:
+class Vdv431Adapter(AdapterInterface):
 
     def __init__(self, request_url, requestor_ref, datalog_directory = None):
         self._request_url = request_url
@@ -26,7 +28,7 @@ class Vdv431Adapter:
             'stops': response.stops
         }
     
-    async def find_departures(self, stop_id, num_results, order_type = 'estimated_time', offset_seconds = 0):
+    async def find_departures(self, stop_id, num_results, order_type = 'estimated_time', offset_seconds = 0) -> dict:
         request = StopEventRequest(self._requestor_ref, stop_id, timestamp(offset_seconds), num_results)
         response = await self._send_stop_event_request(request, order_type)
 
