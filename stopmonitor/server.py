@@ -1,8 +1,6 @@
-import datetime
 import json
 import logging
 import os
-import requests
 import yaml
 
 from fastapi import APIRouter
@@ -11,14 +9,6 @@ from fastapi import Request
 from fastapi import Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from lxml.etree import fromstring
-from lxml.etree import tostring
-
-from .isotime import timestamp
-from .request import StopEventRequest
-from .request import LocationInformationRequest
-from .response import StopEventResponse
-from .response import LocationInformationResponse
 
 class StopMonitorServer:
 
@@ -28,11 +18,19 @@ class StopMonitorServer:
         with open(config_filename, 'r') as config_file:
             self._config = yaml.safe_load(config_file)
 
-        self._config = self._default_config(self._config)
-        
-        self._request_url = self._config['app']['remote_server_endpoint']
-        self._requestor_ref = self._config['app']['remote_server_requestor_ref']
+        # create adapter according to settings
+        if self._config['app']['adapter']['type'] == 'vdv431':
+            from .adapter.vdv431.api import Vdv431Adapter
 
+            self._adapter = Vdv431Adapter(
+                self._config['app']['adapter']['endpoint'],
+                self._config['app']['adapter']['api_key'],
+                './datalog' if self._config['app']['datalog_enabled'] else None
+            )
+        else:
+            raise ValueError(f"unknown adapter type {self._config['app']['adapter']['type']}")
+
+        # create API instance
         self._fastapi = FastAPI()
         self._fastapi.mount('/app/static', StaticFiles(directory='static'), name='static')
         self._fastapi.mount('/landing/static', StaticFiles(directory='landing'), name='landing')
@@ -52,8 +50,8 @@ class StopMonitorServer:
         self._api_router.add_api_route('/view', endpoint=self._view, methods=['GET'], name='view-baseurl')
         self._api_router.add_api_route('/view/{template}', endpoint=self._view, methods=['GET'], name='view')
         
-        self._api_router.add_api_route('/json/stops.json', endpoint=self._json_stopfinder, methods=['GET'])
-        self._api_router.add_api_route('/json/{datatype}/{ordertype}/{stopref}/{numresults}.json', endpoint=self._json_departurefinder, methods=['GET'])
+        self._api_router.add_api_route('/json/stops.json', endpoint=self._json_stoprequest, methods=['GET'])
+        self._api_router.add_api_route('/json/{datatype}/{ordertype}/{stopref}/{numresults}.json', endpoint=self._json_datarequest, methods=['GET'])
 
         self._template_engine = Jinja2Templates(directory='templates')
         self._landing_engine = Jinja2Templates(directory='landing')
@@ -76,6 +74,7 @@ class StopMonitorServer:
         else:
             self._datalog = None
 
+        # create logger instance
         self._logger = logging.getLogger('uvicorn')
 
     async def _index(self, request: Request) -> Response:
@@ -126,7 +125,7 @@ class StopMonitorServer:
 
         return self._template_engine.TemplateResponse(request=request, name=template, context=ctx)
 
-    async def _json_departurefinder(self, datatype: str, stopref: str, ordertype: str, numresults: int, req: Request) -> Response:
+    async def _json_datarequest(self, datatype: str, stopref: str, ordertype: str, numresults: int, req: Request) -> Response:
         
         if self._cache is not None:
             json_cached = self._cache.get(req.url.path)
@@ -134,6 +133,7 @@ class StopMonitorServer:
                 self._logger.info(f'Returning JSON response from cache for {req.url.path}')
                 return Response(content=json_cached, media_type='application/json')
 
+        # handle value constraints
         if not datatype == 'departures' and not datatype == 'situations':
             datatype = 'departures'
         
@@ -146,18 +146,23 @@ class StopMonitorServer:
         if numresults > 50:
             numresults = 50
 
+        # run requests
         try:
             if datatype == 'departures':                
-                request = StopEventRequest(self._requestor_ref, stopref, timestamp(), numresults)
-                response = await self._send_stop_event_request(request, ordertype)
-
-                result = dict()
-                result['departures'] = response.departures
+                # load departures from adapter
+                result = await self._adapter.find_departures(
+                    stopref,
+                    numresults,
+                    ordertype
+                )
 
             elif datatype == 'situations':
+                # TODO: are situations loaded separately?!
+
                 result = dict()
                 result['situations'] = list()
 
+            # create JSON result
             json_result = json.dumps(result)
             if self._cache is not None:
                 self._cache.set(req.url.path, json_result, self._cache_ttl)
@@ -168,18 +173,22 @@ class StopMonitorServer:
             self._logger.error(str(ex))
             return Response(content=str(ex), status_code=500)
         
-    async def _json_stopfinder(self, req: Request) -> Response:
+    async def _json_stoprequest(self, req: Request) -> Response:
 
-        if 'q' not in req.query_params or req.query_params['q'].strip() == '':
+        # handle value constraints
+        if 'q' in req.query_params:
+            lookup_name = req.query_params['q'].strip()
+            if lookup_name == '':
+                return Response(status_code=400)
+        else:
             return Response(status_code=400)
 
+        # run requests
         try:
-            request = LocationInformationRequest(self._requestor_ref, req.query_params['q'].strip())
-            response = await self._send_location_information_request(request)
+            # load stops from adapter
+            result = await self._adapter.find_stops(lookup_name)
 
-            result = dict()
-            result['stops'] = response.stops
-
+            # create JSON result
             json_result = json.dumps(result)
 
             self._logger.info(f'Returning JSON response from remote server for {req.url.path}')
@@ -187,53 +196,6 @@ class StopMonitorServer:
         except Exception as ex:
             self._logger.error(str(ex))
             return Response(content=str(ex), status_code=500)
-
-    async def _send_stop_event_request(self, trias_request: StopEventRequest, order_type: str) -> StopEventResponse:
-
-        await self._create_datalog('StopEventRequest', trias_request.xml())
-        response = requests.post(self._request_url, headers={'Content-Type': 'application/xml', 'User-Agent': 'TripMonitorServer/1'}, data=trias_request.xml())
-        
-        await self._create_datalog('StopEventResponse', response.content)
-        return StopEventResponse(response.content, order_type)
-    
-    async def _send_location_information_request(self, trias_request: LocationInformationRequest) -> LocationInformationResponse:
-        
-        await self._create_datalog('LocationInformationRequest', trias_request.xml())
-        response = requests.post(self._request_url, headers={'Content-Type': 'application/xml', 'User-Agent': 'TripMonitorServer/1'}, data=trias_request.xml())
-
-        await self._create_datalog('LocationInformationResponse', response.content)
-        return LocationInformationResponse(response.content)
-    
-    async def _create_datalog(self, datatype: str, xml: str) -> None:
-        if self._datalog is not None:
-
-            # look for old datalog files and remove them
-            # for speed up, check for the filename not beginning with today instead of ressource consuming difference calculation
-            today = datetime.datetime.now().strftime('%Y-%m-%d')
-            for datalog_file in os.listdir(self._datalog):
-
-                # proceed only if the datalogfile is not from today
-                if not datalog_file.startswith(today):
-                    datalog_timestamp = datalog_file.split('_')[0]
-                    datalog_timestamp = datetime.datetime.strptime(datalog_timestamp, '%Y-%m-%d-%H.%M.%S-%f')
-
-                    difference = (datetime.datetime.now() - datalog_timestamp).total_seconds()
-                    if difference > 60 * 60 * 24:
-                        datalog_file = os.path.join(self._datalog, datalog_file)
-                        os.remove(datalog_file)
-
-            # generate new datalog file
-            datalog_timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H.%M.%S-%f')
-            datalog_filename = f"{datalog_timestamp}_{datatype}.xml"
-
-            with open(os.path.join(self._datalog, datalog_filename), 'wb') as datalog_file:
-                try:
-                    xml = tostring(fromstring(xml), pretty_print=True)
-                except Exception as ex:
-                    self._logger.error(str(ex))
-                finally:
-                    datalog_file.write(xml)
-                    datalog_file.close()
 
     def _default_config(self, config):
         default_config = {
@@ -272,6 +234,7 @@ class StopMonitorServer:
         if isinstance(defaults, dict) and isinstance(actual, dict):
             return {k: self._merge_config(defaults.get(k, {}), actual.get(k, {})) for k in set(defaults) | set(actual)}
         return actual if actual else defaults
+
 
     def create(self) -> FastAPI:
         self._fastapi.include_router(self._api_router)
