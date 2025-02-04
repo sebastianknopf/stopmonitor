@@ -55,7 +55,6 @@ class StopMonitorServer:
         self._api_router.add_api_route('/view/{template}', endpoint=self._view, methods=['GET'], name='view')
         
         self._api_router.add_api_route('/json/stops.json', endpoint=self._json_stoprequest, methods=['GET'])
-        self._api_router.add_api_route('/json/{datatype}/{ordertype}/{stopref}/{numresults}.json', endpoint=self._json_datarequest, methods=['GET'])
 
         self._api_router.add_api_websocket_route('/ws/{ordertype}/{numresults}/{stopref}', endpoint=self._websocket)
 
@@ -130,54 +129,6 @@ class StopMonitorServer:
                 ctx['template'][key] = qp_value
 
         return self._template_engine.TemplateResponse(request=request, name=template, context=ctx)
-
-    async def _json_datarequest(self, datatype: str, stopref: str, ordertype: str, numresults: int, req: Request) -> Response:
-        
-        if self._cache is not None:
-            json_cached = self._cache.get(req.url.path)
-            if json_cached is not None:
-                self._logger.info(f'Returning JSON response from cache for {req.url.path}')
-                return Response(content=json_cached, media_type='application/json')
-
-        # handle value constraints
-        if not datatype == 'departures' and not datatype == 'situations':
-            datatype = 'departures'
-        
-        if stopref.strip() == '':
-            return Response(status_code=400)
-        
-        if not ordertype == 'planned_time' and not ordertype == 'estimated_time':
-            ordertype = 'estimated_time'
-        
-        if numresults > 50:
-            numresults = 50
-
-        # run requests
-        try:
-            if datatype == 'departures':                
-                # load departures from adapter
-                result = await self._adapter.find_departures(
-                    stopref,
-                    numresults,
-                    ordertype
-                )
-
-            elif datatype == 'situations':
-                # TODO: are situations loaded separately?!
-
-                result = dict()
-                result['situations'] = list()
-
-            # create JSON result
-            json_result = json.dumps(result)
-            if self._cache is not None:
-                self._cache.set(req.url.path, json_result, self._cache_ttl)
-
-            self._logger.info(f'Returning JSON response from remote server for {req.url.path}')
-            return Response(content=json_result, media_type='application/json')
-        except Exception as ex:
-            self._logger.error(str(ex))
-            return Response(content=str(ex), status_code=500)
         
     async def _json_stoprequest(self, req: Request) -> Response:
 
@@ -204,6 +155,17 @@ class StopMonitorServer:
             return Response(content=str(ex), status_code=500)
         
     async def _websocket(self, ordertype: str, numresults: int, stopref: str, ws: WebSocket):
+        # handle value constraints
+        if not ordertype == 'planned_time' and not ordertype == 'estimated_time':
+            ordertype = 'estimated_time'
+
+        if numresults > 50:
+            numresults = 50
+        
+        if stopref.strip() == '':
+            return Response(status_code=400)
+
+        # accept WebSocket connection
         await ws.accept()
 
         try:
@@ -220,7 +182,8 @@ class StopMonitorServer:
 
                 # wait for the next update interval
                 await asyncio.sleep(30)
-
+        except asyncio.CancelledError:
+            logging.info('CE')
         except WebSocketDisconnect:
             pass
 
