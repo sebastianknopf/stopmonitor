@@ -3,6 +3,8 @@ on:
   push:
     tags:
       - '*'
+  workflow_dispatch: # allow manual start
+
 jobs:
   docker-build-push-latest:
     runs-on: ubuntu-latest
