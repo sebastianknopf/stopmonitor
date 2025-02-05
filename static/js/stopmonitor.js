@@ -70,7 +70,13 @@ class StopMonitor {
 
 		socket.onclose = function(event) {
 			callback(null, 0);
-			setTimeout(t._connectWebSocket(callback), 30000);
+			setTimeout(function () {
+				t._connectWebSocket(callback)
+			}, 30000);
+		}
+
+		window.onbeforeunload = function () {
+			socket.close();
 		}
 	}
 }
