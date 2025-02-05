@@ -172,7 +172,7 @@ class StopMonitorServer:
             while True:
                 # load departures from adapter
                 result = await self._adapter.find_departures(
-                    stopref,
+                    stopref.strip(),
                     numresults,
                     ordertype
                 )
@@ -182,8 +182,6 @@ class StopMonitorServer:
 
                 # wait for the next update interval
                 await asyncio.sleep(30)
-        except asyncio.CancelledError:
-            logging.info('CE')
         except WebSocketDisconnect:
             pass
 
@@ -223,8 +221,8 @@ class StopMonitorServer:
     def _merge_config(self, defaults, actual):
         if isinstance(defaults, dict) and isinstance(actual, dict):
             return {k: self._merge_config(defaults.get(k, {}), actual.get(k, {})) for k in set(defaults) | set(actual)}
+        
         return actual if actual else defaults
-
 
     def create(self) -> FastAPI:
         self._fastapi.include_router(self._api_router)
