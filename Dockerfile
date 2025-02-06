@@ -14,6 +14,7 @@ COPY . .
 # run installation inside the container
 RUN pip install --no-cache-dir .
 RUN rm -rf .git
+RUN rm -rf .github
 
 # set default environment variables
 ENV HOST=0.0.0.0
