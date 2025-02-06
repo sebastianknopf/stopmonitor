@@ -200,7 +200,7 @@ class StopMonitorServer:
             },
             'landing': {
                 'title': 'DemoStopMonitorInstance',
-                'logo': '/static/default/logo.svg',
+                'logo': '/img/demo-icon-white.svg',
                 'color': '#21a635',
                 'default_template': 'default',
                 'title_enabled': True,
