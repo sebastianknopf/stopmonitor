@@ -4,8 +4,6 @@ class StopMonitor {
         this.numResults = numResults;
         this.orderType = orderType;
 		
-		this.updateRunningCurrently = false;
-		
 		this.pageHidden = false;
 		
 		let t = this;
@@ -18,62 +16,67 @@ class StopMonitor {
 		}, false);
     }
 
-    updateDepartures(departureTemplate, udpateFrequency, callback) {
-        // create template
+	requestDataUpdates(departureTemplate, callback) {
+		// create template
         this.departureTemplate = _.template(departureTemplate);
-
-        // initial call
-        this.updateDeparturesAsync(callback);
-
-        // periodic call
-        let t = this;
-        setInterval(function() {
-            t.updateDeparturesAsync(callback)
-        }, udpateFrequency * 1000);
-    }
-
-    async updateDeparturesAsync(callback) {
-        if (this.updateRunningCurrently) {
-			return;
-		}
 		
-		if (/*this.pageHidden || */document.hidden) {
-			return;
-		}
-		
-		this.updateRunningCurrently = true;
-		let t = this;
-		let html = '';
-
+		// establish WebSocket connection to server
 		try {
-			
-			let response = await fetch(`/json/departures/${this.orderType}/${this.stopRef}/${this.numResults}.json`);
-			let result = await response.json();
-
-			_.forEach(result.departures, function (departure) {
-				html += t.departureTemplate({
-					planned_date: departure.planned_date,
-					planned_time: departure.planned_time,
-					estimated_date: departure.estimated_date,
-					estimated_time: departure.estimated_time,
-					realtime: departure.realtime,
-					cancelled: departure.cancelled,
-					planned_bay: departure.planned_bay,
-					mode: departure.mode,
-					sub_mode: departure.sub_mode,
-					published_mode: departure.published_mode,
-					line_name: departure.line_name,
-					line_description: departure.line_description,
-					origin_text: departure.origin_text,
-					destination_text: departure.destination_text
-				});
-			});
-			
-			callback(html, result.departures.length);
+			this._connectWebSocket(callback)			
 		} catch (error) {
-			callback(html, 0);
+			callback(null, 0);
 		}
-		
-		this.updateRunningCurrently = false;
-    }
+	} 
+	
+	_connectWebSocket(callback) {
+		// obtain WebSocket connection parameters
+		let protocol = 'ws:';
+		let host = window.location.host
+		if (window.location.protocol == 'https:') {
+			protocol = 'wss:'
+		}
+
+		let t = this;
+
+		// create WebSocket instance
+		let socket = new WebSocket(`${protocol}//${host}/ws/${this.orderType}/${this.numResults}/${this.stopRef}`);
+		socket.onmessage = function (event) {
+			let message = JSON.parse(event.data)
+
+			let html = '';
+			if ('departures' in message) {
+				_.forEach(message.departures, function (departure) {
+					html += t.departureTemplate({
+						planned_date: departure.planned_date,
+						planned_time: departure.planned_time,
+						estimated_date: departure.estimated_date,
+						estimated_time: departure.estimated_time,
+						realtime: departure.realtime,
+						cancelled: departure.cancelled,
+						planned_bay: departure.planned_bay,
+						mode: departure.mode,
+						sub_mode: departure.sub_mode,
+						published_mode: departure.published_mode,
+						line_name: departure.line_name,
+						line_description: departure.line_description,
+						origin_text: departure.origin_text,
+						destination_text: departure.destination_text
+					});
+				});
+				
+				callback(html, message.departures.length);
+			}
+		}
+
+		socket.onclose = function(event) {
+			callback(null, 0);
+			setTimeout(function () {
+				t._connectWebSocket(callback)
+			}, 30000);
+		}
+
+		window.onbeforeunload = function () {
+			socket.close();
+		}
+	}
 }

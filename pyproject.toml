@@ -12,6 +12,7 @@ dependencies = [
     "click",
     "fastapi[all]",
     "lxml",
+    "memcache",
     "pytz",
     "pyyaml",
     "requests",

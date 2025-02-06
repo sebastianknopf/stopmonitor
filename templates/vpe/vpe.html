@@ -104,7 +104,7 @@
 				<% planned_time_formatted = moment(planned_time, ['H:m:s']).format('HH:mm') %>
 				<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;"><%= planned_time_formatted %></td>
 				<% } %>
-                <td class="w3-right-align w3-padding-16 w3-single-line w3-hide-small" style="vertical-align: middle;"><%= planned_bay %></td>
+                <td class="w3-right-align w3-padding-16 w3-single-line w3-hide-small" style="vertical-align: middle;"><%= planned_bay != null ? planned_bay.replace('Bstg. ', '') : null %></td>
             </tr>
 	    <% } %>
         `;
@@ -122,8 +122,8 @@
 		let spanClockInitial = document.getElementById('clock-content');
 		spanClockInitial.innerHTML = moment().format('HH:mm');
 		
-        let tm = new StopMonitor('{{ view['stop_ref'] }}', {{ view['num_results'] }});
-        tm.updateDepartures(departureTemplate, {{ view['update_frequency'] }}, function(html, numResults) {
+        let sm = new StopMonitor('{{ view['stop_ref'] }}', {{ view['num_results'] }});
+        sm.requestDataUpdates(departureTemplate, function(html, numResults) {
             departuresTableContent = document.getElementById('departures-table-content');
 
 			if (numResults > 0) {
