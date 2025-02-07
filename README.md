@@ -27,11 +27,30 @@ This is especially good for development.
 
 If you simply want to run a stopmonitor on your server (e.g. behind a reverse-proxy), you also can use docker:
 ```
-docker run -rm -v ./host/config.yaml:/app/config/config.yaml -p 8080:8080 sebastianknopf/stopmonitor:latest
+docker run --rm -v ./host/config.yaml:/app/config/config.yaml -p 8080:8080 sebastianknopf/stopmonitor:latest
 ```
 Please note, that you're required to mount a configuration file with your specific configuration into the docker container to make the application running. 
 
 Additionally, you can specify a certain hostname for the underlaying uvicorn server to listen to by using ENV variables with option `-e` (e.g. `-e PORT=80`, `-e HOST=127.0.0.1`).
+
+### Running behind a Reverse Proxy
+In production environments, you might want to run the stopmonitor behind a reverse proxy. Please note, that the uvicorn server running as ASGI requires the header `X-Forwared-Proto` set to `https`, if you want to the stopmonitor in a HTTPS environment. Otherwise, the URLs in the templates won't be rendered correctly. Please also note the proxy redirection for the websocket route. See the following apache2 configuration for reference:
+
+```
+ProxyPreserveHost On
+
+# set request header to force https in template URLs
+RequestHeader set X-Forwarded-Proto "https"
+
+# reverse proxy route for landing page and layouts
+ProxyPass / http://127.0.0.1:8080/
+
+# reverse proxy route for websocket connections
+RewriteEngine on
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^/?(.*) "ws://127.0.0.1:8080/$1" [P,L]
+```
 
 ### Configuration
 The configuration YAML file enables you to customize the stopmonitor instance for your needs. See [config/default.yaml](./config/default.yaml) for further assistance.

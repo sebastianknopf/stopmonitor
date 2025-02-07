@@ -15,7 +15,16 @@ def cli():
 @click.option('--port', '-p', default='8080', help='Port for the server to listen')
 def run(config, host, port):
     server = StopMonitorServer(config)
-    uvicorn.run(app=server.create(), host=host, port=int(port), proxy_headers=True)
+    uvicorn.run(
+        app=server.create(), 
+        host=host, 
+        port=int(port), 
+        proxy_headers=True,
+        forwarded_allow_ips=[
+            '172.17.0.1',
+            '127.0.0.1'
+        ]
+    )
 
 
 if __name__ == '__main__':
