@@ -9,6 +9,7 @@
             "type": "debugpy",
             "request": "launch",
             "module": "stopmonitor",
+            "python": "${workspaceRoot}/venv/Scripts/python.exe",
             "args": ["run", "./config/dev.yaml", "-h", "127.0.0.1", "-p", "8080"],
             "console": "integratedTerminal",
             "env": {"PYTHONPATH": "${workspaceRoot}"},
