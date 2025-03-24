@@ -4,6 +4,7 @@ from lxml.etree import Element
 from operator import itemgetter
 
 from .isotime import localtime
+from stopmonitor.adapter.text import TextSanitizer
 
 class TriasResponse(ABC):
     def __init__(self, xml_data: str):
@@ -114,12 +115,17 @@ class StopEventResponse(TriasResponse):
         # remove real_departure_time field
         self.departures = [{k: v for k, v in d.items() if k != 'sort_time'} for d in sorted_results]
 
+        # process situation elements
+        text_sanitizer = TextSanitizer()
+
         situation_results = list()
         for pt_situation in self.root.findall('.//StopEventResponse//StopEventResponseContext//Situations//PtSituation', self.nsmap):
             
             situation = dict()
 
             situation['text'] = self._extract(pt_situation, './/{http://www.siri.org.uk/siri}Detail', None)
+            situation['text'] = text_sanitizer.sanitize(situation['text'])
+            
             situation['priority'] = self._extract(pt_situation, './/{http://www.siri.org.uk/siri}Priority', 3)
             
             situation['affects'] = list()
