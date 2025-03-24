@@ -27,8 +27,9 @@ class StopEventResponse(TriasResponse):
         super().__init__(xml_data)
 
         self.departures = list()
+        self.situations = list()
 
-        results = list()
+        departure_results = list()
         for stop_event_result in self.root.findall('.//StopEventResponse/StopEventResult', self.nsmap):
             stop_event = stop_event_result.find('.//StopEvent', self.nsmap)
             
@@ -103,15 +104,40 @@ class StopEventResponse(TriasResponse):
             departure['origin_text'] = self._extract(stop_event, './/Service/OriginText/Text', None)
             departure['destination_text'] = self._extract(stop_event, './/Service/DestinationText/Text', None)
 
-            results.append(departure)
+            departure_results.append(departure)
 
-            # sort by estimated departure time (estimated_time if available, else planned_time)
-            # data are sorted by planned time by default, so we do not need to change anything here in this other case
-            if order_type == 'estimated_time':
-                sorted_results = sorted(results, key=itemgetter('sort_time'))
+        # sort by estimated departure time (estimated_time if available, else planned_time)
+        # data are sorted by planned time by default, so we do not need to change anything here in this other case
+        if order_type == 'estimated_time':
+            sorted_results = sorted(departure_results, key=itemgetter('sort_time'))
 
-            # remove real_departure_time field
-            self.departures = [{k: v for k, v in d.items() if k != 'sort_time'} for d in sorted_results]
+        # remove real_departure_time field
+        self.departures = [{k: v for k, v in d.items() if k != 'sort_time'} for d in sorted_results]
+
+        situation_results = list()
+        for pt_situation in self.root.findall('.//StopEventResponse//StopEventResponseContext//Situations//PtSituation', self.nsmap):
+            
+            situation = dict()
+
+            situation['text'] = self._extract(pt_situation, './/{http://www.siri.org.uk/siri}Detail', None)
+            situation['priority'] = self._extract(pt_situation, './/{http://www.siri.org.uk/siri}Priority', 3)
+            
+            situation['affects'] = list()
+            for affected_stop_place in pt_situation.findall('.//{http://www.siri.org.uk/siri}Affects//{http://www.siri.org.uk/siri}StopPoints//{http://www.siri.org.uk/siri}AffectedStopPoint'):
+                situation['affects'].append({
+                    'type': 'stop',
+                    'id': self._extract(affected_stop_place, './/{http://www.siri.org.uk/siri}StopPointRef')
+                })
+
+            for affected_line in pt_situation.findall('.//{http://www.siri.org.uk/siri}Affects//{http://www.siri.org.uk/siri}VehicleJourneys//{http://www.siri.org.uk/siri}AffectedVehicleJourney'):
+                situation['affects'].append({
+                    'type': 'line',
+                    'id': self._extract(affected_line, './/{http://www.siri.org.uk/siri}LineRef')
+                })
+
+            situation_results.append(situation)
+
+        self.situations = situation_results
 
 class LocationInformationResponse(TriasResponse):
     
