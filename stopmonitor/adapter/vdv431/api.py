@@ -32,8 +32,20 @@ class Vdv431Adapter(AdapterInterface):
         request = StopEventRequest(self._requestor_ref, stop_id, timestamp(offset_seconds), num_results)
         response = await self._send_stop_event_request(request, order_type)
 
+        situations = list()
+        for situation in response.situations:
+            situation_match = True
+            for affect in situation['affects']:
+                if affect['type'] == 'stop' and affect['id'] != stop_id:
+                    situation_match = False
+                    break
+
+            if situation_match:
+                situations.append(situation)
+
         return {
-            'departures': response.departures
+            'departures': response.departures,
+            'situations': situations
         }
 
     async def _send_stop_event_request(self, trias_request: StopEventRequest, order_type: str) -> StopEventResponse:
