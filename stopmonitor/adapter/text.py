@@ -9,7 +9,7 @@ class TextSanitizer:
         
         text = BeautifulSoup(text, "html.parser").get_text()
 
-        text = text.replace('\n', '')
+        text = text.replace('\n', ' ')
         text = text.replace('\r', '')
 
         return text
