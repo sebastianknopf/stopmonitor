@@ -22,17 +22,30 @@ class StopMonitorServer:
 
         self._config = self._default_config(self._config)
 
-        # create adapter according to settings
-        if self._config['app']['adapter']['type'] == 'vdv431':
+        # create departure adapter according to settings
+        if self._config['app']['adapter']['departures']['type'] == 'vdv431':
             from .adapter.vdv431.api import Vdv431Adapter
 
-            self._adapter = Vdv431Adapter(
-                self._config['app']['adapter']['endpoint'],
-                self._config['app']['adapter']['api_key'],
+            self._departures_adapter = Vdv431Adapter(
+                self._config['app']['adapter']['departures']['endpoint'],
+                self._config['app']['adapter']['departures']['api_key'],
                 './datalog' if self._config['app']['datalog_enabled'] else None
             )
         else:
-            raise ValueError(f"unknown adapter type {self._config['app']['adapter']['type']}")
+            raise ValueError(f"Unknown adapter type {self._config['app']['adapter']['departures']['type']}")
+        
+        # create situations adapter according to settings
+        if self._config['app']['adapter']['situations'] is not None:
+            if self._config['app']['adapter']['situations']['type'] == 'vdv431':
+                from .adapter.vdv431.api import Vdv431Adapter
+
+                self._situations_adapter = Vdv431Adapter(
+                    self._config['app']['adapter']['situations']['endpoint'],
+                    self._config['app']['adapter']['situations']['api_key'],
+                    './datalog' if self._config['app']['datalog_enabled'] else None
+                )
+            else:
+                raise ValueError(f"Unknown adapter type {self._config['app']['adapter']['situations']['type']}")
 
         # create API instance
         self._fastapi = FastAPI()
@@ -56,7 +69,8 @@ class StopMonitorServer:
         
         self._api_router.add_api_route('/json/stops.json', endpoint=self._json_stoprequest, methods=['GET'])
 
-        self._api_router.add_api_websocket_route('/ws/{ordertype}/{numresults}/{stopref}', endpoint=self._websocket)
+        self._api_router.add_api_websocket_route('/ws/departures/{ordertype}/{numresults}/{stopref}', endpoint=self._departures_websocket)
+        self._api_router.add_api_websocket_route('/ws/situations/{ordertype}/{stopref}', endpoint=self._situations_websocket)
 
         self._template_engine = Jinja2Templates(directory='templates')
         self._landing_engine = Jinja2Templates(directory='landing')
@@ -143,7 +157,7 @@ class StopMonitorServer:
         # run requests
         try:
             # load stops from adapter
-            result = await self._adapter.find_stops(lookup_name)
+            result = await self._departures_adapter.find_stops(lookup_name)
 
             # create JSON result
             json_result = json.dumps(result)
@@ -154,7 +168,7 @@ class StopMonitorServer:
             self._logger.error(str(ex))
             return Response(content=str(ex), status_code=500)
         
-    async def _websocket(self, ordertype: str, numresults: int, stopref: str, ws: WebSocket):
+    async def _departures_websocket(self, ordertype: str, numresults: int, stopref: str, ws: WebSocket):
         # handle value constraints
         if not ordertype == 'planned_time' and not ordertype == 'estimated_time':
             ordertype = 'estimated_time'
@@ -171,7 +185,7 @@ class StopMonitorServer:
         try:
             while True:
                 # load departures from adapter
-                result = await self._adapter.find_departures(
+                result = await self._departures_adapter.find_departures(
                     stopref.strip(),
                     numresults,
                     ordertype
@@ -185,13 +199,46 @@ class StopMonitorServer:
         except WebSocketDisconnect:
             pass
 
+    async def _situations_websocket(self, ordertype: str, stopref: str, ws: WebSocket):
+        # handle value constraints
+        if not ordertype == 'priority' and not ordertype == 'priority':
+            ordertype = 'priority'
+        
+        if stopref.strip() == '':
+            return Response(status_code=400)
+
+        # accept WebSocket connection
+        await ws.accept()
+
+        try:
+            while True:
+                # load departures from adapter
+                if self._situations_adapter is not None:
+                    result = await self._situations_adapter.find_situations(
+                        stopref.strip(),
+                        ordertype
+                    )
+                else:
+                    result = []
+
+                # send results to monitor
+                await ws.send_json(result)
+
+                # wait for the next update interval
+                await asyncio.sleep(60)
+        except WebSocketDisconnect:
+            pass
+
     def _default_config(self, config):
         default_config = {
             'app': {
                 'adapter': {
-                    'type': 'vdv431',
-                    'endpoint': '[YourRemoteServerEndpoint]',
-                    'api_key': '[YourRemoteServerApiKey]'
+                    'departures': {
+                        'type': 'vdv431',
+                        'endpoint': '[YourRemoteServerEndpoint]',
+                        'api_key': '[YourRemoteServerApiKey]'
+                    },
+                    'situations': None
                 },
                 'landing_enabled': True,
                 'admin_enabled': False,

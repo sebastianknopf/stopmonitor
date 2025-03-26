@@ -111,6 +111,8 @@ class StopEventResponse(TriasResponse):
         # data are sorted by planned time by default, so we do not need to change anything here in this other case
         if order_type == 'estimated_time':
             sorted_results = sorted(departure_results, key=itemgetter('sort_time'))
+        else:
+            sorted_results = departure_results
 
         # remove real_departure_time field
         self.departures = [{k: v for k, v in d.items() if k != 'sort_time'} for d in sorted_results]

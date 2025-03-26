@@ -28,8 +28,16 @@ class Vdv431Adapter(AdapterInterface):
             'stops': response.stops
         }
     
-    async def find_departures(self, stop_id, num_results, order_type = 'estimated_time', offset_seconds = 0) -> dict:
+    async def find_departures(self, stop_id: str, num_results: int, order_type:str = 'estimated_time', offset_seconds:int = 0) -> dict:
         request = StopEventRequest(self._requestor_ref, stop_id, timestamp(offset_seconds), num_results)
+        response = await self._send_stop_event_request(request, order_type)
+
+        return {
+            'departures': response.departures
+        }
+    
+    async def find_situations(self, stop_id:str, order_type:str = 'priority', offset_seconds:int = 0) -> dict:
+        request = StopEventRequest(self._requestor_ref, stop_id, timestamp(offset_seconds), 100)
         response = await self._send_stop_event_request(request, order_type)
 
         situations = list()
@@ -44,14 +52,13 @@ class Vdv431Adapter(AdapterInterface):
                 situations.append(situation)
 
         return {
-            'departures': response.departures,
             'situations': situations
         }
 
     async def _send_stop_event_request(self, trias_request: StopEventRequest, order_type: str) -> StopEventResponse:
 
         await self._create_datalog('StopEventRequest', trias_request.xml())
-        response = requests.post(self._request_url, headers={'Content-Type': 'application/xml', 'User-Agent': 'TripMonitorServer/1'}, data=trias_request.xml())
+        response = requests.post(self._request_url, headers={'Content-Type': 'application/xml', 'User-Agent': 'StopMonitorServer/1'}, data=trias_request.xml())
         
         await self._create_datalog('StopEventResponse', response.content)
         return StopEventResponse(response.content, order_type)
@@ -59,7 +66,7 @@ class Vdv431Adapter(AdapterInterface):
     async def _send_location_information_request(self, trias_request: LocationInformationRequest) -> LocationInformationResponse:
         
         await self._create_datalog('LocationInformationRequest', trias_request.xml())
-        response = requests.post(self._request_url, headers={'Content-Type': 'application/xml', 'User-Agent': 'TripMonitorServer/1'}, data=trias_request.xml())
+        response = requests.post(self._request_url, headers={'Content-Type': 'application/xml', 'User-Agent': 'StopMonitorServer/1'}, data=trias_request.xml())
 
         await self._create_datalog('LocationInformationResponse', response.content)
         return LocationInformationResponse(response.content)
