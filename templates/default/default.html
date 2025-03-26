@@ -84,7 +84,7 @@
 				<tbody id="departures-table-content">
 				</tbody>
 			</table>
-			<div id="situations-div" class="w3-white" style="position: fixed; bottom: 0;">
+			<div id="situations-div" class="w3-white" style="position: fixed; bottom: 0; display: none;">
 				<div id="situations-runner">
 				</div>
 			</div>
@@ -173,10 +173,10 @@
 			if (situationsHtml != null && numResults > 0) {
 				situationsDivRunnerContent.innerHTML = situationsHtml;
 
+				situationsDivContent.style.display = 'flex';
+
 				const scrollSpeed = situationsDivRunnerContent.scrollWidth / 150;
 				situationsDivRunnerContent.style.animationDuration = scrollSpeed + 's';
-
-				situationsDivContent.style.display = 'flex';
 			} else {
 				situationsDivContent.style.display = 'none';
 			}
