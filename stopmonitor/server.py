@@ -22,17 +22,29 @@ class StopMonitorServer:
 
         self._config = self._default_config(self._config)
 
-        # create adapter according to settings
-        if self._config['app']['adapter']['type'] == 'vdv431':
+        # create departure adapter according to settings
+        if self._config['app']['adapter']['departures']['type'] == 'vdv431':
             from .adapter.vdv431.api import Vdv431Adapter
 
-            self._adapter = Vdv431Adapter(
-                self._config['app']['adapter']['endpoint'],
-                self._config['app']['adapter']['api_key'],
+            self._departures_adapter = Vdv431Adapter(
+                self._config['app']['adapter']['departures']['endpoint'],
+                self._config['app']['adapter']['departures']['api_key'],
                 './datalog' if self._config['app']['datalog_enabled'] else None
             )
         else:
-            raise ValueError(f"unknown adapter type {self._config['app']['adapter']['type']}")
+            raise ValueError(f"Unknown adapter type {self._config['app']['adapter']['departures']['type']}")
+        
+        # create situations adapter according to settings
+        if self._config['app']['adapter']['situations']['type'] == 'vdv431':
+            from .adapter.vdv431.api import Vdv431Adapter
+
+            self._situations_adapter = Vdv431Adapter(
+                self._config['app']['adapter']['situations']['endpoint'],
+                self._config['app']['adapter']['situations']['api_key'],
+                './datalog' if self._config['app']['datalog_enabled'] else None
+            )
+        else:
+            raise ValueError(f"Unknown adapter type {self._config['app']['adapter']['situations']['type']}")
 
         # create API instance
         self._fastapi = FastAPI()
@@ -143,7 +155,7 @@ class StopMonitorServer:
         # run requests
         try:
             # load stops from adapter
-            result = await self._adapter.find_stops(lookup_name)
+            result = await self._departures_adapter.find_stops(lookup_name)
 
             # create JSON result
             json_result = json.dumps(result)
@@ -171,7 +183,7 @@ class StopMonitorServer:
         try:
             while True:
                 # load departures from adapter
-                result = await self._adapter.find_departures(
+                result = await self._departures_adapter.find_departures(
                     stopref.strip(),
                     numresults,
                     ordertype
@@ -189,9 +201,12 @@ class StopMonitorServer:
         default_config = {
             'app': {
                 'adapter': {
-                    'type': 'vdv431',
-                    'endpoint': '[YourRemoteServerEndpoint]',
-                    'api_key': '[YourRemoteServerApiKey]'
+                    'departures': {
+                        'type': 'vdv431',
+                        'endpoint': '[YourRemoteServerEndpoint]',
+                        'api_key': '[YourRemoteServerApiKey]'
+                    },
+                    'situations': None
                 },
                 'landing_enabled': True,
                 'admin_enabled': False,

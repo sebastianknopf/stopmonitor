@@ -1,8 +1,13 @@
 app:
   adapter:
-    type: vdv431                                                  # adapter type to be used (available: vdv431)
-    endpoint: [YourRemoteServerEndpoint]                          # endpoint URL of the server
-    api_key: [YourRemoteServerApiKey]                             # API key for access
+    departures:                                                   # adapter for departures
+      type: vdv431                                                # adapter type to be used (available: vdv431)
+      endpoint: [YourRemoteServerEndpoint]                        # endpoint URL of the server
+      api_key: [YourRemoteServerApiKey]                           # API key for access
+    situations:                                                   # adapter for situations
+      type: vdv431                                                # adapter type to be used (available: vdv431)
+      endpoint: [YourRemoteServerEndpoint]                        # endpoint URL of the server
+      api_key: [YourRemoteServerApiKey]                           # API key for access
   landing_enabled: true                                           # enable/disable the landing page
   admin_enabled: false                                            # enable/disable the admin area (not implemented yet!)
   caching_enabled: false                                          # enable/disable caching using memcached, see section caching for more information
