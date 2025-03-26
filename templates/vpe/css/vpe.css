@@ -63,7 +63,7 @@ div#situations-div #situations-runner:hover {
 */
 @keyframes anim-situations-runner {
     from {
-        transform: translateX( 60% );
+        transform: translateX( 100vw );
     }
     to {
         transform: translateX( -100% );

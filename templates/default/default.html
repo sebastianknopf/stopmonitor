@@ -114,7 +114,7 @@
         `;
 
 		let situationTemplate = `
-		<div>+++ <%= text %> +++ </div>
+		<div><b>+++ <%= text %> <% if (is_last_element) { %> +++ <% } %></b></div>
 		`;
 
 		let noDeparturesTemplate = `

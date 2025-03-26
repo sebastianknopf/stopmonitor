@@ -41,7 +41,6 @@ div#situations-div {
     display: flex;
     overflow: hidden;
     white-space: nowrap;
-    width: 100vw;
 }
 
 div#situations-div #situations-runner {
@@ -63,7 +62,7 @@ div#situations-div #situations-runner:hover {
 */
 @keyframes anim-situations-runner {
     from {
-        transform: translateX( 60% );
+        transform: translateX( 100vw );
     }
     to {
         transform: translateX( -100% );
