@@ -23,6 +23,7 @@ class StopMonitorServer:
         self._config = self._default_config(self._config)
 
         # create departure adapter according to settings
+        self._departures_adapter = None
         if self._config['app']['adapter']['departures']['type'] == 'vdv431':
             from .adapter.vdv431.api import Vdv431Adapter
 
@@ -35,6 +36,7 @@ class StopMonitorServer:
             raise ValueError(f"Unknown adapter type {self._config['app']['adapter']['departures']['type']}")
         
         # create situations adapter according to settings
+        self._situations_adapter = None
         if self._config['app']['adapter']['situations'] is not None:
             if self._config['app']['adapter']['situations']['type'] == 'vdv431':
                 from .adapter.vdv431.api import Vdv431Adapter
