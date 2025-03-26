@@ -20,6 +20,11 @@ html, body {
     width: 100px;
 }
 
+table {
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
 table thead {
     font-size: 4em;
 }
@@ -34,6 +39,12 @@ table tbody td:last-child, table thead th:last-child {
 
 table tbody .w3-round {
     width: 200px;
+}
+
+table thead th, 
+table tbody td {
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 div#situations-div {
