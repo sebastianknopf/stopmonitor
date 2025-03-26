@@ -7,6 +7,7 @@
 		<link rel="stylesheet" href="{{ url_for('static', path='/css/w3.css') }}" />
 		<link rel="stylesheet" href="{{ url_for('templates', path='/default/css/default.css') }}" />
 		<style>
+			{% if template['dark'] != '1' %}
 			.w3-theme {
 				background: #21a635;
 				color: #ffffff;
@@ -35,6 +36,25 @@
 				background: #888888;
 				color: #ffffff;
 			}
+			{% else %}
+			html, body {
+				background: #000000 !important;
+				color: #ffffff !important;
+			}
+
+			.w3-theme {
+				background: #272727;
+				color: #ffffff;
+			}
+
+			.w3-single-line {
+				white-space: nowrap;
+			}
+			
+			img {
+				filter: saturate(50%)
+			}
+			{% endif %}
 		</style>
 	</head>
 	<body>
