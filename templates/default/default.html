@@ -56,7 +56,9 @@
 						<th class="w3-padding-16" width="17%">Linie</th>
 						<th class="w3-padding-16">Richtung</th>
 						<th class="w3-right-align w3-padding-16" width="14%">Abfahrt</th>
+						{% if template['platform'] != '0' %}
 						<th class="w3-right-align w3-padding-16 w3-hide-small" width="10%">Steig</th>
+						{% endif %}
 					</tr>
 				</thead>
 				<tbody id="departures-table-content">
@@ -108,7 +110,9 @@
 				<% planned_time_formatted = moment(planned_time, ['H:m:s']).format('HH:mm') %>
 				<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;"><%= planned_time_formatted %></td>
 				<% } %>
+				{% if template['platform'] != '0' %}
                 <td class="w3-right-align w3-padding-16 w3-single-line w3-hide-small" style="vertical-align: middle;"><%= planned_bay != null ? planned_bay.replace('Bstg. ', '') : null %></td>
+				{% endif %}
             </tr>
 	    <% } %>
         `;
