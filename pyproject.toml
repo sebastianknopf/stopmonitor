@@ -9,6 +9,7 @@ authors = [{ name = "Sebastian Knopf", email = "mail@sebastian-knopf.de" }]
 readme = "README.md"
 license = {text = "Apache License (2.0)"}
 dependencies = [
+    "beautifulsoup4",
     "click",
     "fastapi[all]",
     "lxml",

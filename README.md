@@ -88,7 +88,15 @@ These variables are:
 - `origin_text`: The origin stop name of the trip
 - `destination_text`: The destination stop name of the trip
 
-You can use this variables inside your departure template in order to display one departure item.
+You can use these variables inside your departure template in order to display one departure item.
+
+### Departure Template Variables
+Situation templates are a kind of sub-templates within a layout template. See [default.html](./templates/default/default.html) for reference. Each situation template has a set of variables to work with.
+
+These variables are:
+- `text`: The situation detail text
+
+You can use these variables inside your situation template in order to display one situation item.
 
 ## License
 This project is licensed under the Apache License. See [LICENSE.md](LICENSE.md) for more information.

@@ -62,6 +62,10 @@
 				<tbody id="departures-table-content">
 				</tbody>
 			</table>
+			<div id="situations-div" class="w3-white" style="position: fixed; bottom: 0;">
+				<div id="situations-runner">
+				</div>
+			</div>
 		</main>
         <script src="{{ url_for('static', path='/js/underscore.js') }}" type="text/javascript"></script>
 		<script src="{{ url_for('static', path='/js/moment.js') }}" type="text/javascript"></script>
@@ -109,6 +113,10 @@
 	    <% } %>
         `;
 
+		let situationTemplate = `
+		<div><b>+++ <%= text %> <% if (is_last_element) { %> +++ <% } %></b></div>
+		`;
+
 		let noDeparturesTemplate = `
 			<tr>
 				<td class="w3-padding-16" colspan="4" style="vertical-align: middle;">
@@ -123,13 +131,25 @@
 		spanClockInitial.innerHTML = moment().format('HH:mm');
 		
         let sm = new StopMonitor('{{ view['stop_ref'] }}', {{ view['num_results'] }});
-        sm.requestDataUpdates(departureTemplate, function(html, numResults) {
+        sm.requestDataUpdates(departureTemplate, situationTemplate, function(departuresHtml, situationsHtml, numResults) {
             departuresTableContent = document.getElementById('departures-table-content');
-
 			if (numResults > 0) {
-				departuresTableContent.innerHTML = html;
+				departuresTableContent.innerHTML = departuresHtml;
 			} else {
 				departuresTableContent.innerHTML = noDeparturesTemplate;
+			}
+
+			situationsDivContent = document.getElementById('situations-div');
+			situationsDivRunnerContent = document.getElementById('situations-runner');
+			if (situationsHtml != null) {
+				situationsDivRunnerContent.innerHTML = situationsHtml;
+
+				const scrollSpeed = situationsDivRunnerContent.scrollWidth / 150;
+				situationsDivRunnerContent.style.animationDuration = scrollSpeed + 's';
+
+				situationsDivContent.style.display = 'flex';
+			} else {
+				situationsDivContent.style.display = 'none';
 			}
 			
 			clockContent = document.getElementById('clock-content');

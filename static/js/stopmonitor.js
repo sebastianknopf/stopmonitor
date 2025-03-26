@@ -16,15 +16,16 @@ class StopMonitor {
 		}, false);
     }
 
-	requestDataUpdates(departureTemplate, callback) {
+	requestDataUpdates(departureTemplate, situationTemplate, callback) {
 		// create template
         this.departureTemplate = _.template(departureTemplate);
+		this.situationTemplate = _.template(situationTemplate);
 		
 		// establish WebSocket connection to server
 		try {
 			this._connectWebSocket(callback)			
 		} catch (error) {
-			callback(null, 0);
+			callback(null, null, 0);
 		}
 	} 
 	
@@ -43,10 +44,12 @@ class StopMonitor {
 		socket.onmessage = function (event) {
 			let message = JSON.parse(event.data)
 
-			let html = '';
+			let departuresHtml = null;
 			if ('departures' in message) {
-				_.forEach(message.departures, function (departure) {
-					html += t.departureTemplate({
+				departuresHtml = '';
+
+				_.forEach(message.departures, function (departure, index) {
+					departuresHtml += t.departureTemplate({
 						planned_date: departure.planned_date,
 						planned_time: departure.planned_time,
 						estimated_date: departure.estimated_date,
@@ -60,16 +63,29 @@ class StopMonitor {
 						line_name: departure.line_name,
 						line_description: departure.line_description,
 						origin_text: departure.origin_text,
-						destination_text: departure.destination_text
+						destination_text: departure.destination_text,
+						is_last_element: index == message.departures.length - 1
 					});
 				});
-				
-				callback(html, message.departures.length);
 			}
+
+			let situationsHtml = null;
+			if ('situations' in message) {
+				situationsHtml = '';
+
+				_.forEach(message.situations, function (situation, index) {
+					situationsHtml += t.situationTemplate({
+						text: situation.text,
+						is_last_element: index == message.situations.length - 1
+					});
+				});
+			}
+
+			callback(departuresHtml, situationsHtml, message.departures.length);
 		}
 
 		socket.onclose = function(event) {
-			callback(null, 0);
+			callback(null, null, 0);
 			setTimeout(function () {
 				t._connectWebSocket(callback)
 			}, 30000);

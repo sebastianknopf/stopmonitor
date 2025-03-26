@@ -36,6 +36,39 @@ table tbody .w3-round {
     width: 200px;
 }
 
+div#situations-div {
+    font-size: 5em;
+    display: flex;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+div#situations-div #situations-runner {
+    animation-iteration-count: infinite;
+    animation-name: anim-situations-runner;
+    animation-timing-function: linear;
+    padding: 5px 15px 5px 15px;
+    display: flex;
+}
+
+div#situations-div #situations-runner:hover {
+    animation-play-state: paused;
+}
+
+/**
+* BOTH of the marquee items are going to be translating left at the same time.
+* And, once each of them has translated to -100%, they will both snap back into
+* place, making it seem as if they are continuously scrolling.
+*/
+@keyframes anim-situations-runner {
+    from {
+        transform: translateX( 100vw );
+    }
+    to {
+        transform: translateX( -100% );
+    }
+}
+
 @media only screen and (max-width: 1000px) {
     #header span {
         font-size: 4em;
@@ -57,6 +90,10 @@ table tbody .w3-round {
 
     table tbody .w3-round {
         width: 90px;
+    }
+
+    div#situations-div {
+        font-size: 2em;
     }
 }
 
@@ -81,5 +118,9 @@ table tbody .w3-round {
 
     table tbody .w3-round {
         width: 45px;
+    }
+
+    div#situations-div {
+        font-size: 1.1em;
     }
 }
