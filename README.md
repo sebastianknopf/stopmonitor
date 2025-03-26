@@ -55,6 +55,8 @@ RewriteRule ^/?(.*) "ws://127.0.0.1:8080/$1" [P,L]
 ### Configuration
 The configuration YAML file enables you to customize the stopmonitor instance for your needs. See [config/default.yaml](./config/default.yaml) for further assistance.
 
+You can configure different adapters for departure (and stop lookup) as well as situations. If you want to disable displaying situations, set the property `app.adapters.situations` to `null` explicitly.
+
 ## Templating
 The application is designed to be as flexible as possible by using templates. There're two types of templates: The *layout templates* describe the layout of the departure monitor (including heading, footer, images, colors, ...). Layout templates are rendered using Jinja2 as template engine. The *departure templates* describe one row for one departure item (with different handling of route colors, displaying realtime information, cancellations, ...). Departure templates are rendered using underscore.js as template engine.
 
@@ -87,6 +89,7 @@ These variables are:
 - `line_description`: The supplementary line description of the departure
 - `origin_text`: The origin stop name of the trip
 - `destination_text`: The destination stop name of the trip
+- `is_last_element`: Indicates whether this is the last element of the departures collection
 
 You can use these variables inside your departure template in order to display one departure item.
 
@@ -95,6 +98,7 @@ Situation templates are a kind of sub-templates within a layout template. See [d
 
 These variables are:
 - `text`: The situation detail text
+- `is_last_element`: Indicates whether this is the last element of the situations collection
 
 You can use these variables inside your situation template in order to display one situation item.
 
