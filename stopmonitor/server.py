@@ -225,7 +225,7 @@ class StopMonitorServer:
                 await ws.send_json(result)
 
                 # wait for the next update interval
-                await asyncio.sleep(30)
+                await asyncio.sleep(60)
         except WebSocketDisconnect:
             pass
 
