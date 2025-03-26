@@ -55,6 +55,8 @@ RewriteRule ^/?(.*) "ws://127.0.0.1:8080/$1" [P,L]
 ### Configuration
 The configuration YAML file enables you to customize the stopmonitor instance for your needs. See [config/default.yaml](./config/default.yaml) for further assistance.
 
+You can configure different adapters for departure (and stop lookup) as well as situations. If you want to disable displaying situations, set the property `app.adapters.situations` to `null` explicitly.
+
 ## Templating
 The application is designed to be as flexible as possible by using templates. There're two types of templates: The *layout templates* describe the layout of the departure monitor (including heading, footer, images, colors, ...). Layout templates are rendered using Jinja2 as template engine. The *departure templates* describe one row for one departure item (with different handling of route colors, displaying realtime information, cancellations, ...). Departure templates are rendered using underscore.js as template engine.
 
@@ -67,7 +69,12 @@ Each layout template can use `url_for` (see Jinja2 docs for more information) to
 - `view.num_results`: The number of results to be displayed, taken from query parameter `n`, default is 10 items
 - `view.update_frequency`: The update frequency seconds, taken from query parameter `u`, default is 30s
 
-If your template requires custom variables, you can pass them as query parameters by prepending `tx` before your varibale name. The `tx` is replaced by the server instance and the variable is added as `template.[variable]` into your layout template.
+If your template requires custom variables, you can pass them as query parameters by prepending `tx` before your varibale name. The `tx` is replaced by the server instance and the variable is added as `template.[variable]` into your layout template. You can see some examples that way:
+
+- Try to add the parameter txplatform=0 - This makes the `default` and `vpe` layouts suppressing the 'Steig' column
+- Try to add the parameter txdark=1 - This makes the `default` and `vpe` layouts appear in dark mode
+
+_However, please note that working with these template variables always depends on the template you use._
 
 ### Departure Template Variables
 Departure templates are a kind of sub-templates within a layout template. See [default.html](./templates/default/default.html) for reference. Each departure template has a set of variables to work with. 
@@ -87,6 +94,7 @@ These variables are:
 - `line_description`: The supplementary line description of the departure
 - `origin_text`: The origin stop name of the trip
 - `destination_text`: The destination stop name of the trip
+- `is_last_element`: Indicates whether this is the last element of the departures collection
 
 You can use these variables inside your departure template in order to display one departure item.
 
@@ -95,6 +103,7 @@ Situation templates are a kind of sub-templates within a layout template. See [d
 
 These variables are:
 - `text`: The situation detail text
+- `is_last_element`: Indicates whether this is the last element of the situations collection
 
 You can use these variables inside your situation template in order to display one situation item.
 
