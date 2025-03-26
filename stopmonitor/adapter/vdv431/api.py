@@ -52,7 +52,7 @@ class Vdv431Adapter(AdapterInterface):
                 situations.append(situation)
 
         return {
-            'situations': situation
+            'situations': situations
         }
 
     async def _send_stop_event_request(self, trias_request: StopEventRequest, order_type: str) -> StopEventResponse:
