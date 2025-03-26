@@ -48,7 +48,7 @@ class StopMonitor {
 			if ('departures' in message) {
 				departuresHtml = '';
 
-				_.forEach(message.departures, function (departure) {
+				_.forEach(message.departures, function (departure, index) {
 					departuresHtml += t.departureTemplate({
 						planned_date: departure.planned_date,
 						planned_time: departure.planned_time,
@@ -63,7 +63,8 @@ class StopMonitor {
 						line_name: departure.line_name,
 						line_description: departure.line_description,
 						origin_text: departure.origin_text,
-						destination_text: departure.destination_text
+						destination_text: departure.destination_text,
+						is_last_element: index == message.departures.length - 1
 					});
 				});
 			}
@@ -72,9 +73,10 @@ class StopMonitor {
 			if ('situations' in message) {
 				situationsHtml = '';
 
-				_.forEach(message.situations, function (situation) {
+				_.forEach(message.situations, function (situation, index) {
 					situationsHtml += t.situationTemplate({
-						text: situation.text
+						text: situation.text,
+						is_last_element: index == message.situations.length - 1
 					});
 				});
 			}
