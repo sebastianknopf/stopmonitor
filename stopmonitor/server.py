@@ -168,7 +168,7 @@ class StopMonitorServer:
             self._logger.error(str(ex))
             return Response(content=str(ex), status_code=500)
         
-    async def _departures_websocket(self, ordertype: str, stopref: str, ws: WebSocket):
+    async def _departures_websocket(self, ordertype: str, numresults: int, stopref: str, ws: WebSocket):
         # handle value constraints
         if not ordertype == 'planned_time' and not ordertype == 'estimated_time':
             ordertype = 'estimated_time'
