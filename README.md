@@ -69,7 +69,12 @@ Each layout template can use `url_for` (see Jinja2 docs for more information) to
 - `view.num_results`: The number of results to be displayed, taken from query parameter `n`, default is 10 items
 - `view.update_frequency`: The update frequency seconds, taken from query parameter `u`, default is 30s
 
-If your template requires custom variables, you can pass them as query parameters by prepending `tx` before your varibale name. The `tx` is replaced by the server instance and the variable is added as `template.[variable]` into your layout template.
+If your template requires custom variables, you can pass them as query parameters by prepending `tx` before your varibale name. The `tx` is replaced by the server instance and the variable is added as `template.[variable]` into your layout template. You can see some examples that way:
+
+- Try to add the parameter txplatform=0 - This makes the `default` and `vpe` layouts suppressing the 'Steig' column
+- Try to add the parameter txdark=1 - This makes the `default` and `vpe` layouts appear in dark mode
+
+_However, please note that working with these template variables always depends on the template you use._
 
 ### Departure Template Variables
 Departure templates are a kind of sub-templates within a layout template. See [default.html](./templates/default/default.html) for reference. Each departure template has a set of variables to work with. 
