@@ -124,7 +124,7 @@
 						<td class="w3-right-align w3-padding-16 w3-single-line" style="vertical-align: middle;"><%= estimated_time_formatted %></td>
 						<% } %>
 					<% } else { %>
-					<td class="w3-right-align w3-padding-16 w3-text-red w3-single-line" style="vertical-align: middle;">entfällt</td>
+					<td class="w3-right-align w3-padding-16 w3-text-red w3-single-line" style="vertical-align: middle;display: grid;"><span class="st-cancellation-toggle"><%= planned_time_formatted %></span><span class="w3-text-red st-cancellation-toggle">entfällt</span></td>
 					<% } %>
 				<% } else { %>
 				<% planned_time_formatted = moment(planned_time, ['H:m:s']).format('HH:mm') %>

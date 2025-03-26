@@ -47,6 +47,26 @@ table tbody td {
     white-space: nowrap;
 }
 
+table tbody td span.st-cancellation-toggle {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+table tbody td span.st-cancellation-toggle:first-child {
+    visibility: visible;
+    animation: anim-cancellation-toggle 2s infinite;
+}
+
+table tbody td span.st-cancellation-toggle:last-child {
+    visibility: hidden;
+    animation: anim-cancellation-toggle-odd 2s infinite;
+}
+
+@keyframes anim-cancellation-toggle {
+    0%, 50% { visibility: visible; }
+    50.1%, 100% { visibility: hidden; }
+}
+
 div#situations-div {
     font-size: 5em;
     display: flex;
