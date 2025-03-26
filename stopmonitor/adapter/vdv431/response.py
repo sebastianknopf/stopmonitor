@@ -122,12 +122,14 @@ class StopEventResponse(TriasResponse):
 
         situation_results = list()
         for pt_situation in self.root.findall('.//StopEventResponse//StopEventResponseContext//Situations//PtSituation', self.nsmap):
-            
+
+            situation_text = self._extract(pt_situation, './/{http://www.siri.org.uk/siri}Detail', None)
+            if situation_text is None:
+                continue
+
             situation = dict()
 
-            situation['text'] = self._extract(pt_situation, './/{http://www.siri.org.uk/siri}Detail', None)
-            situation['text'] = text_sanitizer.sanitize(situation['text'])
-            
+            situation['text'] = text_sanitizer.sanitize(situation_text)
             situation['priority'] = self._extract(pt_situation, './/{http://www.siri.org.uk/siri}Priority', 3)
             
             situation['affects'] = list()
