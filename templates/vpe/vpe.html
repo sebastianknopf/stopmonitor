@@ -113,35 +113,40 @@
 	    <% } %>
         `;
 
+		let noDeparturesTemplate = `
+		<tr>
+			<td class="w3-padding-16" colspan="4" style="vertical-align: middle;">
+				<div class="w3-cell-row w3-center" style="height:800px">
+					<div class="w3-container w3-cell w3-cell-middle">Bitte beachten Sie den Aushangfahrplan.</div>
+				</div>
+			</td>
+		</tr>
+		`;
+
 		let situationTemplate = `
 		<div><b>+++ <%= text %> <% if (is_last_element) { %> +++ <% } %></b></div>
 		`;
-
-		let noDeparturesTemplate = `
-			<tr>
-				<td class="w3-padding-16" colspan="4" style="vertical-align: middle;">
-					<div class="w3-cell-row w3-center" style="height:800px">
-						<div class="w3-container w3-cell w3-cell-middle">Bitte beachten Sie den Aushangfahrplan.</div>
-					</div>
-				</td>
-			</tr>
-			`;
         
 		let spanClockInitial = document.getElementById('clock-content');
 		spanClockInitial.innerHTML = moment().format('HH:mm');
 		
         let sm = new StopMonitor('{{ view['stop_ref'] }}', {{ view['num_results'] }});
-        sm.requestDataUpdates(departureTemplate, situationTemplate, function(departuresHtml, situationsHtml, numResults) {
+        sm.requestDepartureUpdates(departureTemplate, function(departuresHtml, numResults) {
             departuresTableContent = document.getElementById('departures-table-content');
 			if (numResults > 0) {
 				departuresTableContent.innerHTML = departuresHtml;
 			} else {
 				departuresTableContent.innerHTML = noDeparturesTemplate;
 			}
-
-			situationsDivContent = document.getElementById('situations-div');
+			
+			clockContent = document.getElementById('clock-content');
+			clockContent.innerHTML = moment().format('HH:mm');
+        });
+		
+		sm.requestSituationUpdates(situationTemplate, function(situationsHtml, numResults) {
+            situationsDivContent = document.getElementById('situations-div');
 			situationsDivRunnerContent = document.getElementById('situations-runner');
-			if (situationsHtml != null) {
+			if (situationsHtml != null && numResults > 0) {
 				situationsDivRunnerContent.innerHTML = situationsHtml;
 
 				const scrollSpeed = situationsDivRunnerContent.scrollWidth / 150;
@@ -151,9 +156,6 @@
 			} else {
 				situationsDivContent.style.display = 'none';
 			}
-			
-			clockContent = document.getElementById('clock-content');
-			clockContent.innerHTML = moment().format('HH:mm');
         });
         </script>
 	</body>

@@ -16,20 +16,30 @@ class StopMonitor {
 		}, false);
     }
 
-	requestDataUpdates(departureTemplate, situationTemplate, callback) {
+	requestDepartureUpdates(departureTemplate, callback) {
 		// create template
         this.departureTemplate = _.template(departureTemplate);
-		this.situationTemplate = _.template(situationTemplate);
 		
 		// establish WebSocket connection to server
 		try {
-			this._connectWebSocket(callback)			
+			this._connectDeparturesWebSocket(callback)			
 		} catch (error) {
-			callback(null, null, 0);
+			callback(null, 0);
 		}
 	} 
+
+	requestSituationUpdates(situationTemplate, callback) {
+		this.situationTemplate = _.template(situationTemplate);
+
+		// establish WebSocket connection to server
+		try {
+			this._connectSituationsWebSocket(callback)			
+		} catch (error) {
+			callback(null, 0);
+		}
+	}
 	
-	_connectWebSocket(callback) {
+	_connectDeparturesWebSocket(callback) {
 		// obtain WebSocket connection parameters
 		let protocol = 'ws:';
 		let host = window.location.host
@@ -40,7 +50,7 @@ class StopMonitor {
 		let t = this;
 
 		// create WebSocket instance
-		let socket = new WebSocket(`${protocol}//${host}/ws/${this.orderType}/${this.numResults}/${this.stopRef}`);
+		let socket = new WebSocket(`${protocol}//${host}/ws/departures/${this.orderType}/${this.numResults}/${this.stopRef}`);
 		socket.onmessage = function (event) {
 			let message = JSON.parse(event.data)
 
@@ -69,6 +79,36 @@ class StopMonitor {
 				});
 			}
 
+			callback(departuresHtml, message.departures.length);
+		}
+
+		socket.onclose = function(event) {
+			callback(null, 0);
+			setTimeout(function () {
+				t._connectDeparturesWebSocket(callback)
+			}, 30000);
+		}
+
+		window.onbeforeunload = function () {
+			socket.close();
+		}
+	}
+
+	_connectSituationsWebSocket(callback) {
+		// obtain WebSocket connection parameters
+		let protocol = 'ws:';
+		let host = window.location.host
+		if (window.location.protocol == 'https:') {
+			protocol = 'wss:'
+		}
+
+		let t = this;
+
+		// create WebSocket instance
+		let socket = new WebSocket(`${protocol}//${host}/ws/situations/priority/${this.stopRef}`);
+		socket.onmessage = function (event) {
+			let message = JSON.parse(event.data)
+
 			let situationsHtml = null;
 			if ('situations' in message) {
 				situationsHtml = '';
@@ -81,13 +121,13 @@ class StopMonitor {
 				});
 			}
 
-			callback(departuresHtml, situationsHtml, message.departures.length);
+			callback(situationsHtml, message.situations.length);
 		}
 
 		socket.onclose = function(event) {
-			callback(null, null, 0);
+			callback(null, 0);
 			setTimeout(function () {
-				t._connectWebSocket(callback)
+				t._connectSituationsWebSocket(callback)
 			}, 30000);
 		}
 
