@@ -1,9 +1,9 @@
-name: Docker Image Latest CI
+name: Build Latest
 on:
   push:
     branches: ["main"]
 jobs:
-  docker-build-push-latest:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: checkout-repository
