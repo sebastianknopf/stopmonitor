@@ -51,6 +51,8 @@ table tbody td {
     white-space: nowrap;
 }
 
+/* Toggling Cancellation Flags */
+
 table tbody td span.st-cancellation-toggle {
     grid-column: 1;
     grid-row: 1;
@@ -76,6 +78,8 @@ table tbody td span.st-cancellation-toggle:last-child {
     50.1%, 100% { visibility: visible; }
 }
 
+/* Situations */
+
 div#situations-div {
     font-size: 5em;
     display: flex;
@@ -95,11 +99,6 @@ div#situations-div #situations-runner:hover {
     animation-play-state: paused;
 }
 
-/**
-* BOTH of the marquee items are going to be translating left at the same time.
-* And, once each of them has translated to -100%, they will both snap back into
-* place, making it seem as if they are continuously scrolling.
-*/
 @keyframes anim-situations-runner {
     from {
         transform: translateX( 100vw );
@@ -108,6 +107,8 @@ div#situations-div #situations-runner:hover {
         transform: translateX( -100% );
     }
 }
+
+/* Media Queries */
 
 @media only screen and (max-width: 1000px) {
     #header span {
